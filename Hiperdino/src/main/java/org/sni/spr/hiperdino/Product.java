@@ -7,21 +7,28 @@ public class Product {
     private static int nextId = 1;
 
     private final int id;
+    private final String category;
+    private final String subcategory;
     private final String name;
-    private final String qty;
-    private final String price;
+    private final int qty;
+    private final UnitsOfMeasurement measure;
+    private final double price;
     private final Boolean gluten;
-    private final Boolean gourmet;
     private final LocalDateTime now = LocalDateTime.now();
+    private final String urlImage;
 
-    public Product(String name, String qty, String price, boolean gluten, boolean gourmet, int id){
+    public Product(String category, String subCategory, String name, int qty, UnitsOfMeasurement measure, double price,
+                   boolean gluten, String urlImage){
 
         this.id = nextId++;
+        this.category = category;
+        this.subcategory = subCategory;
         this.name = name;
         this.qty = qty;
+        this.measure = measure;
         this.price = price;
         this.gluten = gluten;
-        this.gourmet = gourmet;
+        this.urlImage = urlImage;
     }
 }
 
