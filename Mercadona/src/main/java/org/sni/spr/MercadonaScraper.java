@@ -15,11 +15,16 @@ public class MercadonaScraper {
             String postalCode = "35010";
 
             page.navigate("https://www.mercadona.es/");
-            page.waitForSelector("input[name='postcode']");
-            page.waitForSelector(".postal-code-form__button");
-            page.fill("input[aria-label='Código postal']", postalCode);
-            page.click(".postal-code-form__button");
-            Thread.sleep(10000);
+
+            page.waitForSelector("input[aria-label='Código postal']").fill(postalCode);
+            page.locator("input.postal-code-form__button[value='ENTRAR']").first().click();
+            page.waitForLoadState();
+
+            page.getByText("Categorías").first().click();
+
+
+            Thread.sleep(7000);
+            page.close();
         }
     }
 }
