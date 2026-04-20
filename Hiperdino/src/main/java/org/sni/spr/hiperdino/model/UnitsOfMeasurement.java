@@ -5,5 +5,7 @@ public enum UnitsOfMeasurement {
     cl,
     l,
     g,
-    kg;
+    kg,
+    ud,
+    uds
 }

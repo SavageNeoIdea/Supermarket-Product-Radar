@@ -1,71 +1,77 @@
 package org.sni.spr.hiperdino.model;
 
-
-
 import java.time.LocalDateTime;
 
+public class HiperdinoProduct {
 
+    // Identificadores técnicos (Nuevos)
+    private final String sku;
+    private final String ean;
+    private final String sapId;
+    private final String brand;
 
-public class HiperdinoProduct implements Product{
-
+    // Datos de categorización
     private final String category;
     private final String subcategory;
+
+    // Datos del producto
     private final String name;
     private final int packageQty;
     private final int qty;
     private final UnitsOfMeasurement measure;
     private final double price;
     private final Boolean gluten;
-    private final LocalDateTime now = LocalDateTime.now();
     private final String urlImage;
+    private final LocalDateTime timestamp = LocalDateTime.now();
 
-    public HiperdinoProduct(String category, String subCategory, String name, int qty, int packageQty,
-                   UnitsOfMeasurement measure, double price, boolean gluten, String urlImage){
+    public HiperdinoProduct(String sku, String ean, String sapId, String brand,
+                            String category, String subcategory, String name,
+                            int qty, int packageQty, UnitsOfMeasurement measure,
+                            double price, boolean gluten, String urlImage) {
+        this.sku = sku;
+        this.ean = ean;
+        this.sapId = sapId;
+        this.brand = brand;
         this.category = category;
-        this.subcategory = subCategory;
+        this.subcategory = subcategory;
         this.name = name;
-        this.price = price;
-        this.packageQty = packageQty;
         this.qty = qty;
+        this.packageQty = packageQty;
         this.measure = measure;
+        this.price = price;
         this.gluten = gluten;
         this.urlImage = urlImage;
     }
 
     @Override
-    public String getCategory() {return category;}
-    @Override
-    public String getSubcategory() {return subcategory;}
-    @Override
-    public String getName() { return name; }
-    @Override
-    public double getPrice() { return this.price; }
-    @Override
-    public int getPackageQty() { return packageQty; }
-    @Override
-    public int getQty() { return qty; }
-    @Override
-    public UnitsOfMeasurement getMeasure() { return measure; }
-    @Override
-    public Boolean getGluten() {return gluten;}
-    @Override
-    public LocalDateTime getNow() {return now;}
-    @Override
-    public String getUrlImage() {return urlImage;}
-
-    @Override
     public String toString() {
-        return "Product{" +
-                ", category='" + category + "'" +
-                ", subcategory='" + subcategory + "'" +
-                ", name='" + name + "'" +
-                ", qty=" + qty +
-                ", packageQty=" + packageQty +
-                ", measure='" + measure + "'" +
+        return "HiperdinoProduct{" +
+                "sku='" + sku + '\'' +
+                ", ean='" + ean + '\'' +
+                ", brand='" + brand + '\'' +
+                ", name='" + name + '\'' +
                 ", price=" + price +
+                ", category='" + category + '\'' +
+                ", subcategory='" + subcategory + '\'' +
+                ", qty=" + qty +
+                " " + measure +
                 ", gluten=" + gluten +
-                ", urlImage='" + urlImage + "'" +
+                ", timestamp=" + timestamp +
                 '}';
-
     }
+
+    public String getSku() {return sku;}
+    public String getEan() {return ean;}
+    public String getSapId() {return sapId;}
+    public String getBrand() {return brand;}
+    public String getCategory() {return category;}
+    public String getSubcategory() {return subcategory;}
+    public String getName() {return name;}
+    public int getQty() {return qty;}
+    public int getPackageQty() {return packageQty;}
+    public String getMeasure() {return measure.name();}
+    public double getPrice() {return price;}
+    public boolean isGluten() {return gluten;}
+    public String getUrlImage() {return urlImage;}
+    public LocalDateTime getTimestamp() {return timestamp;}
 }

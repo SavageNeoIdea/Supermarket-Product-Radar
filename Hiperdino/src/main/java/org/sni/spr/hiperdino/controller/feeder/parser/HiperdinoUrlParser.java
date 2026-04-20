@@ -1,4 +1,4 @@
-package org.sni.spr.hiperdino.view;
+package org.sni.spr.hiperdino.controller.feeder.parser;
 
 import java.util.ArrayList;
 import java.util.List;

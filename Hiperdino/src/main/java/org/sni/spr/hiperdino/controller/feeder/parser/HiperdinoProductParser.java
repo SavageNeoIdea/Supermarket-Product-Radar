@@ -1,4 +1,4 @@
-package org.sni.spr.hiperdino.view;
+package org.sni.spr.hiperdino.controller.feeder.parser;
 
 import org.sni.spr.hiperdino.model.UnitsOfMeasurement;
 
@@ -7,14 +7,14 @@ import java.util.regex.Pattern;
 
 public class HiperdinoProductParser implements ProductParser {
 
-    private static final Pattern productTextpattern = Pattern.compile("^(.*)\\s+(\\d+x)?(\\d+)\\s*(ml|cl|l|g|kg)$");
-    private static final Pattern pricePattern = Pattern.compile("(\\d+,\\d+)");
+    private static final Pattern productTextpattern = Pattern.compile("^(.*)\\s+(\\d+x)?(\\d+)\\s*(ml|cl|l|g|kg|ud|uds)$");
+    //private static final Pattern pricePattern = Pattern.compile("(\\d+,\\d+)");
 
     private String text;
     private String priceText;
 
     private String name;
-    private double price;
+    // private double price;
     private int qty;
     private UnitsOfMeasurement measure;
     private int packageQty;
@@ -23,9 +23,9 @@ public class HiperdinoProductParser implements ProductParser {
     private Matcher priceMatcher;
 
     @Override
-    public void identify(String text, String priceText){
+    public void identify(String text){
         this.text = text;
-        this.priceText = priceText;
+        //this.priceText = priceText;
         initMatcher();
         if (productMatcher.find()) {
             identifyAttrs();
@@ -35,7 +35,7 @@ public class HiperdinoProductParser implements ProductParser {
 
     public void initMatcher() {
         productMatcher = productTextpattern.matcher(text);
-        priceMatcher = pricePattern.matcher(priceText);
+        //priceMatcher = pricePattern.matcher(priceText);
     }
 
     private void identifyAttrs() {
@@ -43,9 +43,10 @@ public class HiperdinoProductParser implements ProductParser {
         qty = Integer.parseInt(productMatcher.group(3).trim());
         measure = UnitsOfMeasurement.valueOf(productMatcher.group(4));
 
+        /*
         if (priceMatcher.find()) {
             price = Double.parseDouble(priceMatcher.group(1).replace(",", "."));
-        }
+        }*/
     }
 
     private boolean identifyPackage() {
@@ -63,9 +64,9 @@ public class HiperdinoProductParser implements ProductParser {
     }
 
     public String getText() { return text; }
-    public String getPriceText() { return priceText; }
+   // public String getPriceText() { return priceText; }
     public String getName() { return name; }
-    public double getPrice() { return this.price; }
+    //public double getPrice() { return this.price; }
     public int getQty() { return qty; }
     public UnitsOfMeasurement getMeasure() { return measure; }
     public int getPackageQty() { return packageQty; }
