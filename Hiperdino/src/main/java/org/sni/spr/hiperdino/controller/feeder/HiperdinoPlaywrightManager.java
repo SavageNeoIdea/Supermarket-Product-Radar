@@ -64,29 +64,21 @@ public class HiperdinoPlaywrightManager implements WebScraper {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(gtmJson);
 
-            // gtmProductDataObject es un Map de { "ID": { data } }
             root.fields().forEachRemaining(entry -> {
                 JsonNode p = entry.getValue();
                 Map<String, String> map = new HashMap<>();
 
-                // Mapeo exacto basado en tu estructura y el JSON de arriba
                 map.put("sku", p.path("sku").asText());
-
-                // Tratamiento de EAN: Si hay varios, tomamos el primero
                 map.put("ean", p.path("ean").asText());
-
                 map.put("name", p.path("name").asText());
                 map.put("price", p.path("final_price").asText());
                 map.put("brand", p.path("label_brand").asText());
                 map.put("sap_id", p.path("entity_id").asText());
-
                 map.put("image_url", "https://www.hiperdino.es/media/catalog/product/" + p.path("image").asText());
-
                 if (context.size() >= 3) {
                     map.put("category", context.get(1));
                     map.put("subcategory", context.get(2));
                 }
-
                 gtmProducts.add(map);
             });
 
@@ -99,11 +91,8 @@ public class HiperdinoPlaywrightManager implements WebScraper {
     private Map<String, String> createRawMap(Locator product, List<String> context, List<String> jsons) {
         Map<String, String> map = new LinkedHashMap<>();
         ObjectMapper mapper = new ObjectMapper();
-
         String productId = product.getAttribute("data-id");
-
         if (productId == null) return map;
-
         for (String jsonStr : jsons) {
             try {
                 JsonNode root = mapper.readTree(jsonStr);
@@ -111,8 +100,6 @@ public class HiperdinoPlaywrightManager implements WebScraper {
 
                 if (gtmData.has(productId)) {
                     JsonNode p = gtmData.get(productId);
-
-                    // Llenamos el mapa con datos del JSON
                     map.put("sku", p.path("sku").asText());
                     map.put("ean", p.path("ean").asText());
                     map.put("name", p.path("name").asText());
@@ -131,11 +118,9 @@ public class HiperdinoPlaywrightManager implements WebScraper {
     private void clickUrlButton(String url) {
         Locator targetCategory = page.locator(".category-group").filter(new Locator.FilterOptions().setHas(page.locator("a[href*='" + url + "']")))
                 .first();
-
         if (!targetCategory.getAttribute("class").contains("dropdown-open")) {
             targetCategory.locator(".dropdown--trigger").click();
         }
-
         targetCategory.locator("a[href*='" + url + "']").click();
         page.waitForLoadState(LoadState.NETWORKIDLE);
     }
@@ -207,7 +192,6 @@ public class HiperdinoPlaywrightManager implements WebScraper {
         if (postalCode == null || postalCode.length() != 5) {
             throw new IllegalArgumentException("El código postal debe tener 5 números");
         }
-
         String textBlock = "input.input__text.required-entry.postal-input";
         String Button = "button[data-myaction='checkCp']";
         fill(textBlock, postalCode);
@@ -220,9 +204,7 @@ public class HiperdinoPlaywrightManager implements WebScraper {
         String categoriesUrlCssSelector = ".sidebar-item--wrapper a.link--wrapper";
         List<Locator> categoriesUrls = page.
                 locator(categoriesUrlCssSelector).all();
-        //This is for test without exploring all the web, real subList is: categoriesUrls.size() - DUPLICATED_MENU_OFFSET
         categoriesUrls = categoriesUrls.subList(LOWER_LIMIT, DUPLICATED_MENU_OFFSET-2);
-
         for (Locator currentLocation : categoriesUrls) {
             String url = currentLocation.getAttribute("href");
             urls.add(url);

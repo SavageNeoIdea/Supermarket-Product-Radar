@@ -22,10 +22,8 @@ public class ProductResponseHandler {
     public void setupNetworkInterceptor() {
         page.onResponse(this::handleResponse);
     }
-
     private void handleResponse(Response response) {
         String url = response.url();
-
         if (url.contains(subcategory + ".html") && url.contains("is_scroll=1")) {
             try {
                 if (response.status() == 200) {
@@ -47,16 +45,13 @@ public class ProductResponseHandler {
         String productSelector = ".product-list-item.flex-item.loader-over";
         int attempts = 0;
         int maxAttempts = 6;
-
         while (attempts < maxAttempts) {
             int currentCount = page.locator(productSelector).count();
             simulateHumanScroll();
 
             page.waitForLoadState(LoadState.NETWORKIDLE);
             if (Math.random() > 0.7) {humanWait(3000, 5000);}
-
             int newCount = page.locator(productSelector).count();
-
             if (newCount > currentCount) {attempts = 0;}
             else {
                 page.mouse().wheel(0, 500);
@@ -69,7 +64,6 @@ public class ProductResponseHandler {
     private void simulateHumanScroll() {
         int totalScroll = (int) (Math.random() * 800 + 400);
         int currentScroll = 0;
-
         while (currentScroll < totalScroll) {
             int step = (int) (Math.random() * 100 + 50);
             page.mouse().wheel(0, step);
@@ -97,5 +91,4 @@ public class ProductResponseHandler {
     }
 
     private void scrollPage(int height) {page.mouse().wheel(0, height);}
-
 }

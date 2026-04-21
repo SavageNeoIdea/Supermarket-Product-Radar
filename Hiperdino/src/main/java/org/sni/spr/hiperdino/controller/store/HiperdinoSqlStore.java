@@ -82,10 +82,8 @@ public class HiperdinoSqlStore implements Store {
 
                 statement.addBatch();
             }
-
             int[] results = statement.executeBatch();
             conn.commit();
-
             System.out.println("Insertados " + results.length + " productos.");
 
         } catch (SQLException e) {
