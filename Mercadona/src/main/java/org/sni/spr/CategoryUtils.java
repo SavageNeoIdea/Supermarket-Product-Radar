@@ -1,11 +1,12 @@
-package org.sni.spr.controller;
+package org.sni.spr;
 
 import com.google.gson.*;
 import org.sni.spr.model.Category;
+import org.sni.spr.model.CategoryNode;
 
 import java.util.*;
 
-public class CategoryParser {
+public class CategoryUtils {
 
     public Map<Integer, Category> parse(JsonArray results) {
         Map<Integer, Category> map = new HashMap<>();
@@ -24,5 +25,21 @@ public class CategoryParser {
                 parseNode(sub.getAsJsonObject(), id, map);
             }
         }
+    }
+
+
+    public String buildPath(List<CategoryNode> categories) {
+        if (categories == null || categories.isEmpty()) return null;
+        List<String> path = new ArrayList<>();
+        CategoryNode node = categories.getFirst();
+        while (node != null) {
+            path.add(node.getName());
+            if (node.getCategories() == null || node.getCategories().isEmpty()) {
+                break;
+            }
+            node = node.getCategories().getFirst();
+        }
+        Collections.reverse(path);
+        return String.join(" > ", path);
     }
 }

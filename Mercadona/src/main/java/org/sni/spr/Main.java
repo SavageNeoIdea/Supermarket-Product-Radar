@@ -10,10 +10,9 @@ public class Main {
     public static void main(String[] args) {
         MercadonaFeeder feeder = new MercadonaFeeder();
         feeder.loadCategories();
-        List<String> urls = feeder.readSitemap().subList(0, 10);
+        List<String> urls = feeder.readSitemap().subList(1, 11);
         System.out.println("Total URLs: " + urls.size());
-        urls.stream()
-                .filter(url -> url.contains("/product/"))
+        urls
                 .forEach(url -> {
                     String id = feeder.extractId(url);
                     Product product = feeder.getProduct(id);

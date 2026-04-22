@@ -4,13 +4,8 @@ import com.google.gson.Gson;
 import org.sni.spr.model.Product;
 
 public class ProductClient {
-
-    private final HttpClient httpClient;
     private final Gson gson = new Gson();
-
-    public ProductClient(HttpClient httpClient) {
-        this.httpClient = httpClient;
-    }
+    private final HttpClient httpClient = new NetHttpClient();
 
     public Product getProduct(String id) {
         try {
