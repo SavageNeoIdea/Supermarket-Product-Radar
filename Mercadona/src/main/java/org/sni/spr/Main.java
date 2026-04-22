@@ -1,24 +1,31 @@
 package org.sni.spr;
 
-import org.sni.spr.controller.MercadonaFeeder;
-import org.sni.spr.model.Product;
-
+import org.sni.spr.model.*;
+import org.sni.spr.controller.*;
 import java.util.List;
+
 
 public class Main {
 
     public static void main(String[] args) {
-        MercadonaFeeder feeder = new MercadonaFeeder();
-        feeder.loadCategories();
-        List<String> urls = feeder.readSitemap().subList(1, 11);
-        System.out.println("Total URLs: " + urls.size());
-        urls
-                .forEach(url -> {
-                    String id = feeder.extractId(url);
-                    Product product = feeder.getProduct(id);
-                    if (product != null) {
-                        System.out.println(product);
-                    }
-                });
+        String sitemapUrl = "https://tienda.mercadona.es/sitemap.xml";
+        ProductProvider provider = new MercadonaProductProvider();
+        HttpClient httpClient = new MercadonaHttpClient();
+        ProductApiClient apiClient = new ProductApiClient(httpClient);
+        ProductMapper mapper = new ProductMapper();
+        ProductService productService = new ProductService(apiClient, mapper);
+
+
+        List<String> ids = provider.provideProductIDs(sitemapUrl);
+        System.out.println("IDs obtenidos: " + ids.size());
+        ids = ids.subList(0,10);
+        List<Product> products = productService.getProducts(ids);
+        System.out.println("Productos obtenidos: " + products.size());
+        for (Product p : products) {
+            System.out.println(p.getDisplayName());
+            System.out.println(p.getThumbnail());
+            System.out.println(p.getCategories());
+            System.out.println(p.getUnitPrice());
+        }
     }
 }

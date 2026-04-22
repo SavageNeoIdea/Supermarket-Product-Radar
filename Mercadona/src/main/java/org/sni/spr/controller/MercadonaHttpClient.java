@@ -23,8 +23,7 @@ public class MercadonaHttpClient implements HttpClient {
                     .GET()
                     .header("Accept", "application/json")
                     .build();
-            HttpResponse<String> response =
-                    client.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             int status = response.statusCode();
             if (status < 200 || status >= 300) {
                 throw new RuntimeException("HTTP error " + status + " for URL: " + url);

@@ -1,93 +1,51 @@
 package org.sni.spr.model;
 
 import java.util.List;
+import com.google.gson.annotations.SerializedName;
+
 
 public class Product {
     private int id;
     private String ean;
+
+    @SerializedName("display_name")
     private String displayName;
+
     private String thumbnail;
     private String brand;
     private List<CategoryNode> categories;
-    private int quantity;
-    private int packageqty;
-    private String measure;
-    private boolean gluten;
-    private double unitPrice;
-    private double referencePrice;
-    private String unitName;
-    private double unitSize;
 
-    @Override
-    public String toString() {
-        return "Product{" +
-                "id=" + id +
-                ", ean='" + ean + '\'' +
-                ", displayName='" + displayName + '\'' +
-                ", thumbnail='" + thumbnail + '\'' +
-                ", brand='" + brand + '\'' +
-                ", categories=" + categories + '\'' +
-                ", quantity=" + quantity + '\'' +
-                ", packageQty=" + packageqty +
-                ", measure='" + measure + '\'' +
-                ", gluten=" + gluten + '\'' +
-                ", unitPrice=" + unitPrice +
-                '}';
-    }
+    @SerializedName("price_instructions")
+    private PriceInstructions priceInstructions;
 
-    public int getId() {
-        return id;
-    }
 
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public String getThumbnail() {
-        return thumbnail;
-    }
-
-    public List<CategoryNode> getCategories() {
-        return categories;
-    }
+    public int getId() { return id; }
+    public String getDisplayName() { return displayName; }
+    public String getThumbnail() { return thumbnail; }
+    public String getBrand() { return brand; }
+    public List<CategoryNode> getCategories() { return categories; }
 
     public double getUnitPrice() {
-        return unitPrice;
+        return priceInstructions != null
+                ? Double.parseDouble(priceInstructions.unitPrice)
+                : 0.0;
     }
 
     public double getReferencePrice() {
-        return referencePrice;
-    }
-
-    public String getUnitName() {
-        return unitName;
+        return priceInstructions != null
+                ? Double.parseDouble(priceInstructions.referencePrice)
+                : 0.0;
     }
 
     public double getUnitSize() {
-        return unitSize;
+        return priceInstructions != null
+                ? priceInstructions.unitSize
+                : 0.0;
     }
 
-    public String getEan() {
-        return ean;
-    }
-
-    public String getBrand() {
-        return brand;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public int getPackageqty() {
-        return packageqty;
-    }
-
-    public String getMeasure() {
-        return measure;
-    }
-
-    public boolean isGluten() {
-        return gluten;
+    public String getUnitName() {
+        return priceInstructions != null
+                ? priceInstructions.referenceFormat
+                : null;
     }
 }
