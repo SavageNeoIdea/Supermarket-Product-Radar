@@ -12,7 +12,7 @@ public class MercadonaFeeder {
     private final CategoryUtils categoryUtils = new CategoryUtils();
     private final ProductClient productClient = new ProductClient();
     private final ProductProvider sitemapReader = new MercadonaProductProvider();
-    private final HttpClient httpClient = new NetHttpClient();
+    private final HttpClient httpClient = new MercadonaHttpClient();
     private Map<Integer, Category> categoryMap = new HashMap<>();
 
     public void loadCategories() {

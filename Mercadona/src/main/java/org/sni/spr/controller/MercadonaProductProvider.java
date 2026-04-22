@@ -6,6 +6,7 @@ import java.util.*;
 
 public class MercadonaProductProvider implements ProductProvider {
 
+    @Override
     public List<String> provideProductIDs(String sitemapUrl) {
         try {
             return Jsoup.connect(sitemapUrl)

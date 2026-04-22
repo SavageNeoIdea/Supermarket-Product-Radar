@@ -5,7 +5,7 @@ import org.sni.spr.model.Product;
 
 public class ProductClient {
     private final Gson gson = new Gson();
-    private final HttpClient httpClient = new NetHttpClient();
+    private final HttpClient httpClient = new MercadonaHttpClient();
 
     public Product getProduct(String id) {
         try {
