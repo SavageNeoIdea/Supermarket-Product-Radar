@@ -8,7 +8,9 @@ public class ProductMapper {
 
     public Product fromJson(String json) {
         try {
-            return gson.fromJson(json, Product.class);
+            Product product = gson.fromJson(json, Product.class);
+            product.buildCategories();
+            return product;
         } catch (Exception e) {
             throw new RuntimeException("Error mapping product JSON", e);
         }

@@ -1,25 +1,28 @@
 package org.sni.spr.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Category {
-    private int id;
     private String name;
-    private Integer parentId;
+    private List<Category> categories;
 
-    public Category(int id, String name, Integer parentId) {
-        this.id = id;
-        this.name = name;
-        this.parentId = parentId;
+    public String getName() { return name; }
+    public List<Category> getCategories() { return categories; }
+
+
+    public List<String> extractPath() {
+        List<String> path = new ArrayList<>();
+        traverse(this, path);
+        return path;
     }
 
-    public int getId() {
-        return id;
-    }
 
-    public String getName() {
-        return name;
-    }
-
-    public Integer getParentId() {
-        return parentId;
+    private void traverse(Category node, List<String> path) {
+        if (node == null) return;
+        path.add(node.getName());
+        if (node.getCategories() != null && !node.getCategories().isEmpty()) {
+            traverse(node.getCategories().getFirst(), path);
+        }
     }
 }

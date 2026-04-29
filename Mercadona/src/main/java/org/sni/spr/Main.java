@@ -23,8 +23,9 @@ public class Main {
         System.out.println("Productos obtenidos: " + products.size());
         for (Product p : products) {
             System.out.println(p.getDisplayName());
-            System.out.println(p.getThumbnail());
-            System.out.println(p.getCategories());
+            System.out.println(p.getCategory());
+            System.out.println(p.getSubcategory());
+            System.out.println(p.getSubsubcategory());
             System.out.println(p.getUnitPrice());
         }
     }
