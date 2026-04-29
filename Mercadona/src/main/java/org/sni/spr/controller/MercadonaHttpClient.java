@@ -5,13 +5,12 @@ import java.net.URI;
 import java.net.http.*;
 
 
-public class MercadonaHttpClient implements HttpClient {
-
-    private final java.net.http.HttpClient client;
+public class MercadonaHttpClient implements HttpClientManager {
+    private final HttpClient client;
 
     public MercadonaHttpClient() {
-        this.client = java.net.http.HttpClient.newBuilder()
-                .version(java.net.http.HttpClient.Version.HTTP_2)
+        this.client = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_2)
                 .build();
     }
 

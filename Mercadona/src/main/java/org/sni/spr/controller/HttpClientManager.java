@@ -1,5 +1,5 @@
 package org.sni.spr.controller;
 
-public interface HttpClient {
+public interface HttpClientManager {
     String makeRequest(String url);
 }

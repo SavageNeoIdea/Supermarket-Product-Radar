@@ -10,10 +10,8 @@ public class Main {
     public static void main(String[] args) {
         String sitemapUrl = "https://tienda.mercadona.es/sitemap.xml";
         ProductProvider provider = new MercadonaProductProvider();
-        HttpClient httpClient = new MercadonaHttpClient();
-        ProductApiClient apiClient = new ProductApiClient(httpClient);
-        ProductMapper mapper = new ProductMapper();
-        ProductService productService = new ProductService(apiClient, mapper);
+        HttpClientManager httpClient = new MercadonaHttpClient();
+        MercadonaProductService productService = new MercadonaProductService(httpClient);
 
 
         List<String> ids = provider.provideProductIDs(sitemapUrl);
@@ -27,6 +25,7 @@ public class Main {
             System.out.println(p.getSubcategory());
             System.out.println(p.getSubsubcategory());
             System.out.println(p.getUnitPrice());
+            System.out.println("---------------");
         }
     }
 }
