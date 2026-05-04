@@ -31,10 +31,10 @@ public class Suscriptor implements MessageListener {
             consumer.setMessageListener(this);
 
             connection.start();
-            System.out.println("[\u2713] EventStoreBuilder: Suscrito al topic 'Products'. Esperando eventos...");
+            System.out.println("EventStoreBuilder: Suscrito al topic 'Products'. Esperando eventos...");
 
         } catch (JMSException e) {
-            System.err.println("[\u2717] Error en el Suscriptor: " + e.getMessage());
+            System.err.println("Error en el Suscriptor: " + e.getMessage());
         }
     }
 
@@ -42,19 +42,9 @@ public class Suscriptor implements MessageListener {
     public void onMessage(Message message) {
         try {
             if (message instanceof TextMessage) {
-                String jsonPayload = ((TextMessage) message).getText();
-
-                System.out.println("[\u2139] Evento recibido en Products: " + jsonPayload);
-                eventStore.saveEvent(jsonPayload);
+                String json = ((TextMessage) message).getText();
+                eventStore.saveEvent(json);
             }
-        } catch (JMSException e) {
-            System.err.println("Error al procesar mensaje: " + e.getMessage());
-        }
-    }
-
-    public void stop() {
-        try {
-            if (connection != null) connection.close();
         } catch (JMSException e) {
             e.printStackTrace();
         }
