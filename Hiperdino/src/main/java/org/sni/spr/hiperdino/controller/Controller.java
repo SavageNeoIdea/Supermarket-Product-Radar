@@ -3,6 +3,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.time.*;
+
+import org.sni.spr.hiperdino.controller.simulationForTesting.HiperdinoSimulation;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
 import org.sni.spr.hiperdino.controller.feeder.ProductFeeder;
 import org.sni.spr.hiperdino.controller.store.Store;
@@ -56,6 +58,30 @@ public class Controller {
         System.out.println("Proceso finalizado con éxito.");
         System.out.printf("Duración total: %d min y %.2f seg (Total: %.2f seg)%n",
                 minutes, remainingSeconds, seconds);
+        System.out.println("---");
+    }
+
+
+    public void initSimulation() throws JMSException {
+        System.out.println("=== INICIANDO SIMULACIÓN DE CARGA (ActiveMQ) ===");
+        long startTime = System.currentTimeMillis();
+
+        HiperdinoSimulation simulation = new HiperdinoSimulation();
+        List<HiperdinoProduct> mockProducts = simulation.init();
+
+        int totalProducts = mockProducts.size();
+        System.out.println("Simulador: Generados " + totalProducts + " productos de prueba.");
+
+        System.out.println("Enviando datos al broker de mensajería...");
+        store.storeAllData(mockProducts);
+
+        long endTime = System.currentTimeMillis();
+        double durationSeconds = (endTime - startTime) / 1000.0;
+//
+        System.out.println("---");
+        System.out.println("Simulación finalizada con éxito.");
+        System.out.printf("Se han procesado y enviado %d mensajes a ActiveMQ.%n", totalProducts);
+        System.out.printf("Tiempo de ejecución de simulación: %.3f segundos.%n", durationSeconds);
         System.out.println("---");
     }
 }
