@@ -6,7 +6,6 @@ import com.google.gson.JsonSerializer;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,34 +14,50 @@ import javax.jms.*;
 
 public class ActiveMQStore implements Store {
 
-    private final String url = "tcp://localhost:61616";
     private final Gson gson;
+    private final String user;
+    private final String url;
+    private final String password;
+    private Connection connection;
+    private Session session;
+    private Topic topic;
 
-    public ActiveMQStore() {
+    public ActiveMQStore(String url, String user, String password) {
         this.gson = new GsonBuilder()
                 .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
                         new JsonPrimitive(src.format(DateTimeFormatter.ISO_DATE_TIME)))
                 .create();
+        this.url = url;
+        this.user = user;
+        this.password = password;
     }
 
     @Override
     public void storeAllData(List<HiperdinoProduct> productList) {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(url);
-
-        try (Connection connection = factory.createConnection("admin", "admin");
-             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
-
-            connection.start();
-            Topic topic = session.createTopic("Product");
-
-            try (MessageProducer producer = session.createProducer(topic)) {
-                for (HiperdinoProduct product : productList) {
-                    String jsonEvent = wrapProduct(product);
-                    producer.send(session.createTextMessage(jsonEvent));
-                }
+        connectToActiveMQ();
+        try (MessageProducer producer = session.createProducer(topic)) {
+            for (HiperdinoProduct product : productList) {
+                String jsonEvent = wrapProduct(product);
+                producer.send(session.createTextMessage(jsonEvent));
             }
+            System.out.println("Sent " + productList.size() + " products to broker.");
         } catch (JMSException e) {
-            throw new RuntimeException("Failed to send products to ActiveMQ", e);
+            throw new RuntimeException("Failed to send products", e);
+        }
+    }
+
+    public void connectToActiveMQ() {
+        try {
+            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(url);
+            connection = factory.createConnection(user, password);
+            connection.start();
+
+            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            topic = session.createTopic("Product");
+
+            System.out.println("Connected to ActiveMQ: " + url);
+        } catch (JMSException e) {
+            throw new RuntimeException("Could not establish ActiveMQ connection", e);
         }
     }
 

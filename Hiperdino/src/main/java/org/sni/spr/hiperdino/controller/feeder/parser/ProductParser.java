@@ -9,4 +9,5 @@ public interface ProductParser {
     public int getPackageQty();
     public int getQty();
     public UnitsOfMeasurement getMeasure();
+    double getRawPriceAsDouble(String price);
 }

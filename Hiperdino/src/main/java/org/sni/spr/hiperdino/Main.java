@@ -15,7 +15,7 @@ public class Main {
         try {
             HiperdinoProductParser productParser = new HiperdinoProductParser();
             WebScraper webScraper = new HiperdinoPlaywrightManager("35010");
-            Store storer = new ActiveMQStore();
+            Store storer = new ActiveMQStore("tcp://localhost:61616", "admin", "admin");
             Controller controller = new Controller(
                     new HiperdinoFeeder(productParser, webScraper),
                     storer

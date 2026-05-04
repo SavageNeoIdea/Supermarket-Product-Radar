@@ -42,7 +42,6 @@ public class HiperdinoProductParser implements ProductParser {
         name = productMatcher.group(1).trim();
         qty = Integer.parseInt(productMatcher.group(3).trim());
         measure = UnitsOfMeasurement.valueOf(productMatcher.group(4));
-
         /*
         if (priceMatcher.find()) {
             price = Double.parseDouble(priceMatcher.group(1).replace(",", "."));
@@ -69,5 +68,19 @@ public class HiperdinoProductParser implements ProductParser {
     //public double getPrice() { return this.price; }
     public int getQty() { return qty; }
     public UnitsOfMeasurement getMeasure() { return measure; }
+
+    @Override
+    public double getRawPriceAsDouble(String priceStr) {
+        double price = 0.0;
+        if (priceStr != null && !priceStr.isEmpty()) {
+            try {
+                price = Double.parseDouble(priceStr.replace(",", "."));
+            } catch (NumberFormatException e) {
+                System.err.println("Error al convertir precio: " + priceStr);
+            }
+        }
+        return price;
+    }
+
     public int getPackageQty() { return packageQty; }
 }

@@ -13,6 +13,7 @@ public class HiperdinoFeeder implements ProductFeeder {
 
     private final ProductParser productParser;
     private final WebScraper webScraper;
+    private final List<HiperdinoProduct> productList = new ArrayList<>();
 
     public HiperdinoFeeder(ProductParser productParser, WebScraper webScraper) {
         this.productParser = productParser;
@@ -20,9 +21,8 @@ public class HiperdinoFeeder implements ProductFeeder {
     }
 
     @Override
-    public List<HiperdinoProduct> extractTransformProduct() {
+    public List<HiperdinoProduct> extractAndTransformProducts() {
         List<Map<String, String>> rawProductsList = webScraper.extractProductRawData();
-        List<HiperdinoProduct> productList = new ArrayList<>();
         for (Map<String, String> rawProductData : rawProductsList) {
             productList.add(formatProduct(rawProductData));
         }
@@ -31,42 +31,20 @@ public class HiperdinoFeeder implements ProductFeeder {
 
     private HiperdinoProduct formatProduct(Map<String, String> rawProduct) {
         productParser.identify(rawProduct.get("name"));
-        String name = productParser.getName();
-        String priceStr = rawProduct.get("price");
-        double price = 0.0;
-        if (priceStr != null && !priceStr.isEmpty()) {
-            try {
-                price = Double.parseDouble(priceStr.replace(",", "."));
-            } catch (NumberFormatException e) {
-                System.err.println("Error al convertir precio: " + priceStr);
-            }
-        }
-        int packageQty = productParser.getPackageQty();
-        int qty = productParser.getQty();
-        UnitsOfMeasurement measure = productParser.getMeasure();
-        String sku = rawProduct.get("sku");
-        String ean = rawProduct.get("ean");
-        String brand = rawProduct.get("brand");
-        String sapId = rawProduct.get("sap_id");
-        String category = rawProduct.get("category");
-        String subcategory = rawProduct.get("subcategory");
-        boolean gluten = Boolean.parseBoolean(rawProduct.get("gluten"));
-
-        String urlImage = rawProduct.get("image_url");
 
         return new HiperdinoProduct(
-                sku,
-                ean,
-                brand,
-                category,
-                subcategory,
-                name,
-                qty,
-                packageQty,
-                measure,
-                price,
-                gluten,
-                urlImage
+                rawProduct.get("sku"),
+                rawProduct.get("ean"),
+                rawProduct.get("brand"),
+                rawProduct.get("category"),
+                rawProduct.get("subcategory"),
+                productParser.getName(),
+                productParser.getQty(),
+                productParser.getPackageQty(),
+                productParser.getMeasure(),
+                productParser.getRawPriceAsDouble(rawProduct.get("price")),
+                Boolean.parseBoolean(rawProduct.get("gluten")),
+                rawProduct.get("image_url")
         );
     }
 }

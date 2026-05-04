@@ -23,17 +23,12 @@ public class Controller {
 
     public void startScheduler() {
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Atlantic/Canary"));
-
         ZonedDateTime nextRun = now.withHour(19).withMinute(0).withSecond(0);
-
         if (now.compareTo(nextRun) > 0) {
             nextRun = nextRun.plusDays(1);
         }
-
         long initialDelay = Duration.between(now, nextRun).toSeconds();
-
         scheduler.scheduleAtFixedRate(() -> {
             try {
                 init();
@@ -45,15 +40,13 @@ public class Controller {
 
     public void init() throws JMSException {
         long startTime = System.currentTimeMillis();
-        List<HiperdinoProduct> products = productFeeder.extractTransformProduct();
+        List<HiperdinoProduct> products = productFeeder.extractAndTransformProducts();
         store.storeAllData(products);
         long endTime = System.currentTimeMillis();
         long durationMillis = endTime - startTime;
-
         double seconds = durationMillis / 1000.0;
         long minutes = (long) seconds / 60;
         double remainingSeconds = seconds % 60;
-
         System.out.println("---");
         System.out.println("Proceso finalizado con éxito.");
         System.out.printf("Duración total: %d min y %.2f seg (Total: %.2f seg)%n",
@@ -65,19 +58,14 @@ public class Controller {
     public void initSimulation() throws JMSException {
         System.out.println("=== INICIANDO SIMULACIÓN DE CARGA (ActiveMQ) ===");
         long startTime = System.currentTimeMillis();
-
         HiperdinoSimulation simulation = new HiperdinoSimulation();
         List<HiperdinoProduct> mockProducts = simulation.init();
-
         int totalProducts = mockProducts.size();
         System.out.println("Simulador: Generados " + totalProducts + " productos de prueba.");
-
         System.out.println("Enviando datos al broker de mensajería...");
         store.storeAllData(mockProducts);
-
         long endTime = System.currentTimeMillis();
         double durationSeconds = (endTime - startTime) / 1000.0;
-//
         System.out.println("---");
         System.out.println("Simulación finalizada con éxito.");
         System.out.printf("Se han procesado y enviado %d mensajes a ActiveMQ.%n", totalProducts);
