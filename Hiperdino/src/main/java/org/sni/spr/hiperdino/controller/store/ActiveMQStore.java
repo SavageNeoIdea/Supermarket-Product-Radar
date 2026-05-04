@@ -33,7 +33,7 @@ public class ActiveMQStore implements Store {
              Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
 
             connection.start();
-            Topic topic = session.createTopic("Products");
+            Topic topic = session.createTopic("Product");
 
             try (MessageProducer producer = session.createProducer(topic)) {
                 for (HiperdinoProduct product : productList) {
