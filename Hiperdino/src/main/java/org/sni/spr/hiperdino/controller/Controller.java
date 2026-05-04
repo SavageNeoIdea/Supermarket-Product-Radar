@@ -7,6 +7,7 @@ import org.sni.spr.hiperdino.model.HiperdinoProduct;
 import org.sni.spr.hiperdino.controller.feeder.ProductFeeder;
 import org.sni.spr.hiperdino.controller.store.Store;
 
+import javax.jms.JMSException;
 import java.util.List;
 
 public class Controller {
@@ -40,9 +41,9 @@ public class Controller {
         }, initialDelay, TimeUnit.DAYS.toSeconds(1), TimeUnit.SECONDS);
     }
 
-    public void init() {
+    public void init() throws JMSException {
         long startTime = System.currentTimeMillis();
-        List<HiperdinoProduct> products = productFeeder.getProducts();
+        List<HiperdinoProduct> products = productFeeder.extractTransformProduct();
         store.storeAllData(products);
         long endTime = System.currentTimeMillis();
         long durationMillis = endTime - startTime;

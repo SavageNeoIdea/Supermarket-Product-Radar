@@ -4,17 +4,11 @@ import java.time.LocalDateTime;
 
 public class HiperdinoProduct {
 
-    // Identificadores técnicos (Nuevos)
     private final String sku;
     private final String ean;
-    private final String sapId;
     private final String brand;
-
-    // Datos de categorización
     private final String category;
     private final String subcategory;
-
-    // Datos del producto
     private final String name;
     private final int packageQty;
     private final int qty;
@@ -24,13 +18,12 @@ public class HiperdinoProduct {
     private final String urlImage;
     private final LocalDateTime timestamp = LocalDateTime.now();
 
-    public HiperdinoProduct(String sku, String ean, String sapId, String brand,
+    public HiperdinoProduct(String sku, String ean, String brand,
                             String category, String subcategory, String name,
                             int qty, int packageQty, UnitsOfMeasurement measure,
                             double price, boolean gluten, String urlImage) {
         this.sku = sku;
         this.ean = ean;
-        this.sapId = sapId;
         this.brand = brand;
         this.category = category;
         this.subcategory = subcategory;
@@ -42,6 +35,7 @@ public class HiperdinoProduct {
         this.gluten = gluten;
         this.urlImage = urlImage;
     }
+
 
     @Override
     public String toString() {
@@ -62,7 +56,6 @@ public class HiperdinoProduct {
 
     public String getSku() {return sku;}
     public String getEan() {return ean;}
-    public String getSapId() {return sapId;}
     public String getBrand() {return brand;}
     public String getCategory() {return category;}
     public String getSubcategory() {return subcategory;}

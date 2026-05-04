@@ -10,7 +10,6 @@ import java.util.List;
 
 public class HiperdinoSqlStore implements Store {
     private static final String DB_URL = "jdbc:sqlite:myDB.db";
-
     public HiperdinoSqlStore() {
         initDatabase();
     }
@@ -22,7 +21,6 @@ public class HiperdinoSqlStore implements Store {
                 sku TEXT,
                 timestamp TEXT,
                 ean TEXT,
-                sap_id TEXT,
                 brand TEXT,
                 category TEXT,
                 subcategory TEXT,
@@ -64,21 +62,20 @@ public class HiperdinoSqlStore implements Store {
 
             conn.setAutoCommit(false);
 
-            for (HiperdinoProduct p : productList) {
-                statement.setString(1, p.getSku());
-                statement.setString(2, p.getTimestamp().toString());
-                statement.setString(3, p.getEan());
-                statement.setString(4, p.getSapId());
-                statement.setString(5, p.getBrand());
-                statement.setString(6, p.getCategory());
-                statement.setString(7, p.getSubcategory());
-                statement.setString(8, p.getName());
-                statement.setInt(9, p.getQty());
-                statement.setInt(10, p.getPackageQty());
-                statement.setString(11, p.getMeasure());
-                statement.setDouble(12, p.getPrice());
-                statement.setInt(13, p.isGluten() ? 1 : 0);
-                statement.setString(14, p.getUrlImage());
+            for (HiperdinoProduct product : productList) {
+                statement.setString(1, product.getSku());
+                statement.setString(2, product.getTimestamp().toString());
+                statement.setString(3, product.getEan());
+                statement.setString(5, product.getBrand());
+                statement.setString(6, product.getCategory());
+                statement.setString(7, product.getSubcategory());
+                statement.setString(8, product.getName());
+                statement.setInt(9, product.getQty());
+                statement.setInt(10, product.getPackageQty());
+                statement.setString(11, product.getMeasure());
+                statement.setDouble(12, product.getPrice());
+                statement.setInt(13, product.isGluten() ? 1 : 0);
+                statement.setString(14, product.getUrlImage());
 
                 statement.addBatch();
             }

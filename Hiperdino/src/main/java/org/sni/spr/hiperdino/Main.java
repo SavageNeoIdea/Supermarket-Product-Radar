@@ -4,9 +4,9 @@ import org.sni.spr.hiperdino.controller.store.HiperdinoSqlStore;
 import org.sni.spr.hiperdino.controller.store.Store;
 import org.sni.spr.hiperdino.controller.Controller;
 import org.sni.spr.hiperdino.controller.feeder.HiperdinoFeeder;
-import org.sni.spr.hiperdino.controller.feeder.HiperdinoPlaywrightManager;
+import org.sni.spr.hiperdino.controller.feeder.scraper.HiperdinoPlaywrightManager;
 import org.sni.spr.hiperdino.controller.feeder.parser.HiperdinoProductParser;
-import org.sni.spr.hiperdino.controller.feeder.WebScraper;
+import org.sni.spr.hiperdino.controller.feeder.scraper.WebScraper;
 
 public class Main {
 

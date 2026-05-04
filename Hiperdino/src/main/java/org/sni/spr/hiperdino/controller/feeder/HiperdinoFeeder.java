@@ -1,6 +1,7 @@
 package org.sni.spr.hiperdino.controller.feeder;
 
 import org.sni.spr.hiperdino.controller.feeder.parser.ProductParser;
+import org.sni.spr.hiperdino.controller.feeder.scraper.WebScraper;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
 import org.sni.spr.hiperdino.model.UnitsOfMeasurement;
 
@@ -12,13 +13,14 @@ public class HiperdinoFeeder implements ProductFeeder {
 
     private final ProductParser productParser;
     private final WebScraper webScraper;
+
     public HiperdinoFeeder(ProductParser productParser, WebScraper webScraper) {
         this.productParser = productParser;
         this.webScraper = webScraper;
     }
 
     @Override
-    public List<HiperdinoProduct> getProducts() {
+    public List<HiperdinoProduct> extractTransformProduct() {
         List<Map<String, String>> rawProductsList = webScraper.extractProductRawData();
         List<HiperdinoProduct> productList = new ArrayList<>();
         for (Map<String, String> rawProductData : rawProductsList) {
@@ -55,7 +57,6 @@ public class HiperdinoFeeder implements ProductFeeder {
         return new HiperdinoProduct(
                 sku,
                 ean,
-                sapId,
                 brand,
                 category,
                 subcategory,

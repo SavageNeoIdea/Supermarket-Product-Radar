@@ -1,4 +1,4 @@
-package org.sni.spr.hiperdino.controller.feeder;
+package org.sni.spr.hiperdino.controller.feeder.scraper;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
