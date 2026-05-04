@@ -3,6 +3,8 @@ package org.sni.spr.hiperdino.controller.feeder.scraper;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Response;
 import com.microsoft.playwright.options.LoadState;
+import org.sni.spr.hiperdino.controller.feeder.parser.HiperdinoUrlParser;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -12,9 +14,9 @@ public class ProductResponseHandler {
     private String subcategory;
     private final List<String> capturedResponses = new ArrayList<>();
 
-    public ProductResponseHandler(Page page, String subcategory) {
+    public ProductResponseHandler(Page page, String url) {
         this.page = page;
-        this.subcategory = subcategory;
+        this.subcategory = HiperdinoUrlParser.getCategorySubcategoryName(url).getLast();
         setupNetworkInterceptor();
         scrollUntilEnd();
     }
@@ -22,6 +24,17 @@ public class ProductResponseHandler {
     public void setupNetworkInterceptor() {
         page.onResponse(this::handleResponse);
     }
+
+    public void scrollUntilEnd() {
+        int failureAttempts = 0;
+        final int maxFailures = 6;
+        while (failureAttempts < maxFailures) {
+            int previousCount = countProducts();
+            simulateHumanScroll();
+            failureAttempts = (pageHasNewProducts(previousCount)) ? 0 : ++failureAttempts;
+        }
+    }
+
     private void handleResponse(Response response) {
         String url = response.url();
         if (url.contains(subcategory + ".html") && url.contains("is_scroll=1")) {
@@ -37,58 +50,50 @@ public class ProductResponseHandler {
         }
     }
 
-    public List<String> getCapturedResponses() {
-        return capturedResponses;
+    private boolean pageHasNewProducts(int previousCount) {
+        return countProducts() > previousCount;
     }
 
-    public void scrollUntilEnd() {
-        String productSelector = ".product-list-item.flex-item.loader-over";
-        int attempts = 0;
-        int maxAttempts = 6;
-        while (attempts < maxAttempts) {
-            int currentCount = page.locator(productSelector).count();
-            simulateHumanScroll();
-
-            page.waitForLoadState(LoadState.NETWORKIDLE);
-            if (Math.random() > 0.7) {humanWait(3000, 5000);}
-            int newCount = page.locator(productSelector).count();
-            if (newCount > currentCount) {attempts = 0;}
-            else {
-                page.mouse().wheel(0, 500);
-                attempts++;
-                chargeNewRequests();
-            }
-        }
+    private int countProducts() {
+        return page.locator(".product-list-item.flex-item.loader-over").count();
     }
 
     private void simulateHumanScroll() {
-        int totalScroll = (int) (Math.random() * 800 + 400);
+        int totalScroll = ThreadLocalRandom.current().nextInt(400, 1201);
         int currentScroll = 0;
+
         while (currentScroll < totalScroll) {
-            int step = (int) (Math.random() * 100 + 50);
-            page.mouse().wheel(0, step);
+            int step = ThreadLocalRandom.current().nextInt(50, 151);
+            scrollPage(step);
             currentScroll += step;
-            page.waitForTimeout((int) (Math.random() * 100 + 50));
+            page.waitForTimeout(ThreadLocalRandom.current().nextInt(50, 151));
+        }
+        stochasticWait();
+    }
+
+    private void stochasticWait() {
+        page.waitForLoadState(LoadState.NETWORKIDLE);
+        if (ThreadLocalRandom.current().nextDouble() > 0.7) {
+            int randomMin = ThreadLocalRandom.current().nextInt(2000, 4001);
+            int randomMax = ThreadLocalRandom.current().nextInt(5000, 8001);
+            humanWait(randomMin, randomMax);
         }
     }
 
     private void humanWait(int min, int max) {
         try {
-            long sleepTime = ThreadLocalRandom.current().nextLong(min, max + 1);
-            Thread.sleep(sleepTime);
+            Thread.sleep(ThreadLocalRandom.current().nextLong(min, max + 1));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException("Error en la espera aleatoria", e);
         }
     }
 
-    private void chargeNewRequests() {
-        for (int i = 0; i < 3; i++) {
-            int scrollAmount = ThreadLocalRandom.current().nextInt(400, 900);
-            scrollPage(scrollAmount);
-            humanWait(400, 800);
-        }
+    private void scrollPage(int height) {
+        page.mouse().wheel(0, height);
     }
 
-    private void scrollPage(int height) {page.mouse().wheel(0, height);}
+    public List<String> getCapturedResponses() {
+        return capturedResponses;
+    }
+
 }

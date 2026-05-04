@@ -1,5 +1,4 @@
 package org.sni.spr.hiperdino.controller.feeder.scraper;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.*;
@@ -12,62 +11,53 @@ import java.util.*;
 public class HiperdinoPlaywrightManager implements WebScraper {
     private static final int LOWER_LIMIT = 13;
     private static final int DUPLICATED_MENU_OFFSET = 143;
-
     private Playwright playwright;
     private Page page;
     private String postalCode;
+    private ProductResponseHandler responseHandler;
+    private final List<Map<String, String>> allProducts = new ArrayList<>();
+
     public HiperdinoPlaywrightManager(String postalCode) {
         this.postalCode = postalCode;
     }
 
     @Override
     public List<Map<String, String>> extractProductRawData() {
-        init();
-        List<String> urls = extractLinks();
-        List<Map<String, String>> allProducts = new ArrayList<>();
-
-        for (String url : urls) {
+        initScraperEngine();
+        for (String url : extractLinks()) {
+            setup(url);
             List<String> context = HiperdinoUrlParser.getCategorySubcategoryName(url);
-            clickUrlButton(url);
-            allProducts.addAll(extractGtmProducts(context));
-            ProductResponseHandler deserializer = new ProductResponseHandler(page, context.getLast());
-            deserializer.setupNetworkInterceptor();
-
-            deserializer.scrollUntilEnd();
-
-            List<String> capturedJsons = deserializer.getCapturedResponses();
-
-            List<Locator> productLocators = page.locator(".product-list-item").all();
-
-            for (Locator productLocator : productLocators) {
+            List<String> capturedJsons = responseHandler.getCapturedResponses();
+            for (Locator productLocator : page.locator(".product-list-item").all()) {
                 Map<String, String> rawData = createRawMap(productLocator, context, capturedJsons);
-
-                if (!rawData.isEmpty()) {
-                    allProducts.add(rawData);
-                }
+                if (!rawData.isEmpty()) allProducts.add(rawData);
             }
         }
         close();
         return allProducts;
     }
 
-    private List<Map<String, String>> extractGtmProducts(List<String> context) {
+    private void setup(String url) {
+        clickUrlButton(url);
+        allProducts.addAll(extractFirstProductPage(url));
+        responseHandler = new ProductResponseHandler(page, url);
+        responseHandler.setupNetworkInterceptor();
+        responseHandler.scrollUntilEnd();
+    }
+
+    private List<Map<String, String>> extractFirstProductPage(String url) {
+        List<String> context = HiperdinoUrlParser.getCategorySubcategoryName(url);
         List<Map<String, String>> gtmProducts = new ArrayList<>();
+
         try {
-            // 1. Esperar a que la variable esté lista en el navegador
             page.waitForFunction("() => typeof gtmProductDataObject !== 'undefined'");
-
-            // 2. Obtener el JSON string del objeto global
             String gtmJson = (String) page.evaluate("() => JSON.stringify(gtmProductDataObject)");
-
-            // 3. Procesar con Jackson
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(gtmJson);
 
             root.fields().forEachRemaining(entry -> {
                 JsonNode p = entry.getValue();
                 Map<String, String> map = new HashMap<>();
-
                 map.put("sku", p.path("sku").asText());
                 map.put("ean", p.path("ean").asText());
                 map.put("name", p.path("name").asText());
@@ -75,6 +65,7 @@ public class HiperdinoPlaywrightManager implements WebScraper {
                 map.put("brand", p.path("label_brand").asText());
                 map.put("sap_id", p.path("entity_id").asText());
                 map.put("image_url", "https://www.hiperdino.es/media/catalog/product/" + p.path("image").asText());
+
                 if (context.size() >= 3) {
                     map.put("category", context.get(1));
                     map.put("subcategory", context.get(2));
@@ -125,7 +116,7 @@ public class HiperdinoPlaywrightManager implements WebScraper {
         page.waitForLoadState(LoadState.NETWORKIDLE);
     }
 
-    private void init() {
+    private void initScraperEngine() {
         playwright = Playwright.create();
         Browser browser = initBrowser();
         BrowserContext context = initBrowserContext(browser);
