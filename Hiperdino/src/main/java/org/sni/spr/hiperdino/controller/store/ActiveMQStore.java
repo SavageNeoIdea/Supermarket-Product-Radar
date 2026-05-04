@@ -33,7 +33,7 @@ public class ActiveMQStore implements Store {
              Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
 
             connection.start();
-            Topic topic = session.createTopic("product");
+            Topic topic = session.createTopic("Products");
 
             try (MessageProducer producer = session.createProducer(topic)) {
                 for (HiperdinoProduct product : productList) {
@@ -49,7 +49,7 @@ public class ActiveMQStore implements Store {
     private String wrapProduct(HiperdinoProduct product) {
         Map<String, Object> event = new HashMap<>();
         event.put("ts", LocalDateTime.now().toString());
-        event.put("ss", "hiperdino");
+        event.put("ss", "Hiperdino");
         event.put("payload", product);
         return gson.toJson(event);
     }
