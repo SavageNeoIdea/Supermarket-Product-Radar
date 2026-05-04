@@ -43,7 +43,7 @@ public class Suscriptor implements MessageListener {
         try {
             if (message instanceof TextMessage) {
                 String json = ((TextMessage) message).getText();
-                eventStore.saveEvent(json);
+                eventStore.saveEvent("Product", json);
             }
         } catch (JMSException e) {
             e.printStackTrace();
