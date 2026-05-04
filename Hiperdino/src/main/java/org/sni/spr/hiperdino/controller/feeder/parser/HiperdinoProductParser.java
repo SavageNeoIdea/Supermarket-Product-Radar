@@ -7,67 +7,30 @@ import java.util.regex.Pattern;
 
 public class HiperdinoProductParser implements ProductParser {
 
-    private static final Pattern productTextpattern = Pattern.compile("^(.*)\\s+(\\d+x)?(\\d+)\\s*(ml|cl|l|g|kg|ud|uds)$");
-    //private static final Pattern pricePattern = Pattern.compile("(\\d+,\\d+)");
+    private static final Pattern productTextpattern = Pattern.compile(
+            "^(.*?)(?:\\s+(?:(\\d+)\\s*[xX]\\s*)?(\\d+)\\s*(ml|cl|l|g|kg|ud|uds\\.?)|\\s+(cm))$",
+            Pattern.CASE_INSENSITIVE
+    );
 
     private String text;
-    private String priceText;
-
     private String name;
-    // private double price;
     private int qty;
     private UnitsOfMeasurement measure;
     private int packageQty;
-
     private Matcher productMatcher;
-    private Matcher priceMatcher;
 
     @Override
     public void identify(String text){
         this.text = text;
-        //this.priceText = priceText;
         initMatcher();
         if (productMatcher.find()) {
             identifyAttrs();
-            updateQtyBasedOnPackage();
         }
     }
 
     public void initMatcher() {
         productMatcher = productTextpattern.matcher(text);
-        //priceMatcher = pricePattern.matcher(priceText);
     }
-
-    private void identifyAttrs() {
-        name = productMatcher.group(1).trim();
-        qty = Integer.parseInt(productMatcher.group(3).trim());
-        measure = UnitsOfMeasurement.valueOf(productMatcher.group(4));
-        /*
-        if (priceMatcher.find()) {
-            price = Double.parseDouble(priceMatcher.group(1).replace(",", "."));
-        }*/
-    }
-
-    private boolean identifyPackage() {
-        if (productMatcher.group(2) != null) {
-            String packageQtyNotFormated = productMatcher.group(2);
-            this.packageQty = Integer.parseInt(packageQtyNotFormated.substring(0, packageQtyNotFormated.length() - 1));
-            return true;
-        } return false;
-    }
-
-    private void updateQtyBasedOnPackage() {
-        if (identifyPackage()) {
-            qty = packageQty * qty;
-        } else packageQty = 1;
-    }
-
-    public String getText() { return text; }
-   // public String getPriceText() { return priceText; }
-    public String getName() { return name; }
-    //public double getPrice() { return this.price; }
-    public int getQty() { return qty; }
-    public UnitsOfMeasurement getMeasure() { return measure; }
 
     @Override
     public double getRawPriceAsDouble(String priceStr) {
@@ -82,5 +45,29 @@ public class HiperdinoProductParser implements ProductParser {
         return price;
     }
 
+    private void identifyAttrs() {
+        name = productMatcher.group(1).trim();
+
+        if (productMatcher.group(5) != null) {
+            qty = 1;
+            packageQty = 1;
+            measure = UnitsOfMeasurement.valueOf("cm");
+        } else {
+            qty = Integer.parseInt(productMatcher.group(3));
+            String rawUnit = productMatcher.group(4).replace(".", "");
+            measure = UnitsOfMeasurement.valueOf(rawUnit);
+
+            if (productMatcher.group(2) != null) {
+                packageQty = Integer.parseInt(productMatcher.group(2));
+                qty = packageQty * qty;
+            } else {
+                packageQty = 1;
+            }
+        }
+    }
+
+    public String getName() { return name; }
+    public int getQty() { return qty; }
+    public UnitsOfMeasurement getMeasure() { return measure; }
     public int getPackageQty() { return packageQty; }
 }

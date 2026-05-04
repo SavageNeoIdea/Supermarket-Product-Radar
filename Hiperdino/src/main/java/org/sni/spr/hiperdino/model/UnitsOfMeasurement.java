@@ -7,5 +7,6 @@ public enum UnitsOfMeasurement {
     g,
     kg,
     ud,
-    uds
+    uds,
+    cm
 }
