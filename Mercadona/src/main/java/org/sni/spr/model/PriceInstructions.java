@@ -6,12 +6,12 @@ public class PriceInstructions {
     @SerializedName("unit_price")
     String unitPrice;
 
-    @SerializedName("reference_price")
-    String referencePrice;
-
     @SerializedName("unit_size")
     double unitSize;
 
-    @SerializedName("reference_format")
-    String referenceFormat;
+    @SerializedName("size_format")
+    String sizeFormat;
+
+    @SerializedName("total_units")
+    int totalUnits;
 }

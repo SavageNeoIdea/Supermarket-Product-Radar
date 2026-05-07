@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName;
 
 
 public class Product {
-    private int id;
+    private float id;
     private String ean;
 
     @SerializedName("display_name")
@@ -17,38 +17,41 @@ public class Product {
     private String category;
     private String subcategory;
     private String subsubcategory;
+    private Details details;
+    private Boolean gluten;
 
     @SerializedName("price_instructions")
     private PriceInstructions priceInstructions;
 
 
-    public void buildCategories() {
-        if (categories == null || categories.isEmpty()) return;
-        List<String> path = categories.getFirst().extractPath();
-        this.category = !path.isEmpty() ? path.get(0) : null;
-        this.subcategory = path.size() > 1 ? path.get(1) : null;
-        this.subsubcategory = path.size() > 2 ? path.get(2) : null;
-    }
-
-    public int getId() { return id; }
+    public float getId() { return id; }
     public String getEan() { return ean; }
     public String getDisplayName() { return displayName; }
     public String getThumbnail() { return thumbnail; }
     public String getBrand() { return brand; }
+    public List<Category> getCategories() { return categories; }
     public String getCategory() { return category; }
     public String getSubcategory() { return subcategory; }
     public String getSubsubcategory() { return subsubcategory; }
+    public String getMandatoryMentions() { return details != null ? details.getMandatoryMentions() : null; }
+    public Boolean getGluten() { return gluten; }
 
     public double getUnitPrice() {
         return priceInstructions != null ? Double.parseDouble(priceInstructions.unitPrice) : 0.0;
     }
-    public double getReferencePrice() {
-        return priceInstructions != null ? Double.parseDouble(priceInstructions.referencePrice) : 0.0;
-    }
     public double getUnitSize() {
         return priceInstructions != null ? priceInstructions.unitSize : 0.0;
     }
-    public String getUnitName() {
-        return priceInstructions != null ? priceInstructions.referenceFormat : null;
+    public String getUnitType() {
+        return priceInstructions != null ? priceInstructions.sizeFormat : null;
     }
+    public int getTotalUnits() {
+        return priceInstructions != null ? priceInstructions.totalUnits : 0;
+    }
+
+
+    public void setCategory(String category) { this.category = category; }
+    public void setSubcategory(String subcategory) { this.subcategory = subcategory; }
+    public void setSubsubcategory(String subsubcategory) { this.subsubcategory = subsubcategory; }
+    public void setGluten(Boolean gluten) { this.gluten = gluten; }
 }
