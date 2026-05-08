@@ -1,3 +1,7 @@
+package controller.store.activemq;
+
+import controller.feeder.Feeder;
+import model.Product;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import javax.jms.*;
 
@@ -10,7 +14,7 @@ public class ActiveMQSuscription implements MessageListener, Subscriptor {
 
     private Connection connection;
     private Session session;
-    private Feeder dataPreprocessor; // Referencia a tu otra clase
+    private Feeder dataPreprocessor;
 
     public ActiveMQSuscription(Feeder dataPreprocessor) {
         this.dataPreprocessor = dataPreprocessor;
@@ -42,10 +46,15 @@ public class ActiveMQSuscription implements MessageListener, Subscriptor {
     @Override
     public void onMessage(Message message) {
         try {
-            if (message instanceof TextMessage) {
-                String json = ((TextMessage) message).getText();
-                //dataPreprocessor.process(json);
+            if (message instanceof TextMessage textMessage) {
+                String event = textMessage.getText();
+                String source = message.getStringProperty("ss");
+                Product product =
+                        dataPreprocessor.processData(source, event);
+                //todo: actualmente no estoy seguro de como usar los mensajes para aportar valor
+                // a la aplicación por ahora solo se calcula el product y ya.
             }
+
         } catch (JMSException e) {
             e.printStackTrace();
         }
