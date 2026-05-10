@@ -18,7 +18,7 @@ public class ProductFeeder implements Feeder {
         for (String source : sources) {
             for (String event : rawJson.get(source)) {
                 JsonObject json = JsonParser.parseString(event).getAsJsonObject();
-                String productName = json.get(source + "Name").getAsString();
+                String productName = json.get(source + "Name").getAsString(); //linea 21
                 double productPrice = json.get(source + "Price").getAsDouble();
                 String productMeasure = json.get(source + "Measure").getAsString();
                 int productQty = json.get(source + "Quantity").getAsInt();

@@ -36,7 +36,7 @@ public class EventReader implements DataReader {
 
                 List<String> lines = Files.readAllLines(Path.of(filePath));
                 rawEvents.put(source, lines);
-
+                System.out.println(lines);
             } catch (IOException e) {
                 throw new RuntimeException(
                         "Error leyendo eventos de " + source,
