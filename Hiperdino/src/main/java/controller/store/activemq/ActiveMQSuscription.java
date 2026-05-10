@@ -8,7 +8,7 @@ import javax.jms.*;
 public class ActiveMQSuscription implements MessageListener, Subscriptor {
 
     private final String BROKER_URL = "tcp://localhost:61616";
-    private final String TOPIC_NAME = "Products";
+    private final String TOPIC_NAME = "product";
     private final String CLIENT_ID = "EventStoreBuilder_Subscriber";
     private final String SUBSCRIPTION_NAME = "MainEventStoreSub";
 
