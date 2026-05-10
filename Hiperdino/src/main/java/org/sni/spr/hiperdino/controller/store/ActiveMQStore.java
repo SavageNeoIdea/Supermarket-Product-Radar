@@ -53,7 +53,7 @@ public class ActiveMQStore implements Store {
             connection.start();
 
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            topic = session.createTopic("Product");
+            topic = session.createTopic("product");
 
             System.out.println("Connected to ActiveMQ: " + url);
         } catch (JMSException e) {
@@ -64,7 +64,7 @@ public class ActiveMQStore implements Store {
     private String wrapProduct(HiperdinoProduct product) {
         Map<String, Object> event = new HashMap<>();
         event.put("ts", LocalDateTime.now().toString());
-        event.put("ss", "Hiperdino");
+        event.put("ss", "hiperdino");
         event.put("payload", product);
         return gson.toJson(event);
     }
