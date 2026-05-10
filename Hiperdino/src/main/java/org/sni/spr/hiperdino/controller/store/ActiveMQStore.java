@@ -1,50 +1,44 @@
 package org.sni.spr.hiperdino.controller.store;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializer;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import javax.jms.*;
 
 public class ActiveMQStore implements Store {
-
     private final Gson gson;
-    private final String user;
-    private final String url;
-    private final String password;
+    private final String user, url, password;
     private Connection connection;
     private Session session;
     private Topic topic;
+    private MessageProducer producer;
+
 
     public ActiveMQStore(String url, String user, String password) {
-        this.gson = new GsonBuilder()
-                .registerTypeAdapter(LocalDateTime.class, (JsonSerializer<LocalDateTime>) (src, typeOfSrc, context) ->
-                        new JsonPrimitive(src.format(DateTimeFormatter.ISO_DATE_TIME)))
-                .create();
         this.url = url;
         this.user = user;
         this.password = password;
+        this.gson = new Gson();
+    }
+
+    @Override
+    public synchronized void storeSingleData(HiperdinoProduct product) {
+        try {
+            if (session == null) connectToActiveMQ();
+            String jsonEvent = wrapProduct(product);
+            producer.send(session.createTextMessage(jsonEvent));
+        } catch (JMSException e) {
+            System.err.println("Fallo en el envío JMS: " + e.getMessage());
+            session = null;
+        }
     }
 
     @Override
     public void storeAllData(List<HiperdinoProduct> productList) {
-        connectToActiveMQ();
-        try (MessageProducer producer = session.createProducer(topic)) {
-            for (HiperdinoProduct product : productList) {
-                String jsonEvent = wrapProduct(product);
-                producer.send(session.createTextMessage(jsonEvent));
-            }
-            System.out.println("Sent " + productList.size() + " products to broker.");
-        } catch (JMSException e) {
-            throw new RuntimeException("Failed to send products", e);
-        }
+        productList.forEach(this::storeSingleData);
     }
 
     public void connectToActiveMQ() {
@@ -52,13 +46,23 @@ public class ActiveMQStore implements Store {
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(url);
             connection = factory.createConnection(user, password);
             connection.start();
-
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             topic = session.createTopic("product");
-
-            System.out.println("Connected to ActiveMQ: " + url);
+            producer = session.createProducer(topic);
+            System.out.println("Conectado y Productor listo en ActiveMQ");
         } catch (JMSException e) {
-            throw new RuntimeException("Could not establish ActiveMQ connection", e);
+            throw new RuntimeException("Error crítico en ActiveMQ", e);
+        }
+    }
+
+    @Override
+    public void close() {
+        try {
+            if (producer != null) producer.close();
+            if (session != null) session.close();
+            if (connection != null) connection.close();
+        } catch (JMSException e) {
+            e.printStackTrace();
         }
     }
 
@@ -76,7 +80,6 @@ public class ActiveMQStore implements Store {
         payload.put("price", product.getHiperdinoPrice());
         payload.put("gluten", product.getHiperdinoGluten());
         payload.put("urlImage", product.getHiperdinoUrlImage());
-
         Map<String, Object> event = new LinkedHashMap<>();
         event.put("uid", product.getHiperdinoEventId());
         event.put("ts", product.getHiperdinoTs().toString());

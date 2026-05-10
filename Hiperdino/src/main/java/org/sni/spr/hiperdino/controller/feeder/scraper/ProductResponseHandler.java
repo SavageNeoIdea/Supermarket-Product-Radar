@@ -3,20 +3,21 @@ package org.sni.spr.hiperdino.controller.feeder.scraper;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Response;
 import com.microsoft.playwright.options.LoadState;
-import org.sni.spr.hiperdino.controller.feeder.parser.HiperdinoUrlParser;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 
 public class ProductResponseHandler {
+    private final Consumer<String> onJsonCaptured;
     private Page page;
     private String subcategory;
     private final List<String> capturedResponses = new ArrayList<>();
 
-    public ProductResponseHandler(Page page, String url) {
+    public ProductResponseHandler(Page page, String url, Consumer<String> rawDataConsumer) {
         this.page = page;
-        this.subcategory = HiperdinoUrlParser.getCategorySubcategoryName(url).getLast();
+        this.onJsonCaptured = rawDataConsumer;
         setupNetworkInterceptor();
         scrollUntilEnd();
     }
@@ -41,11 +42,11 @@ public class ProductResponseHandler {
             try {
                 if (response.status() == 200) {
                     String responseBody = response.text();
-                    capturedResponses.add(responseBody);
-                    System.out.println("✅ Respuesta capturada exitosamente: " + url);
+                    onJsonCaptured.accept(responseBody);
+                    System.out.println("JSON de scroll enviado al pipeline");
                 }
             } catch (Exception e) {
-                System.err.println("Error al leer la respuesta de " + url + ": " + e.getMessage());
+                System.err.println("Error al capturar respuesta: " + e.getMessage());
             }
         }
     }

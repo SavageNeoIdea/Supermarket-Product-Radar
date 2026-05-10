@@ -1,20 +1,21 @@
 package org.sni.spr.hiperdino.controller;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.time.*;
 
-import org.sni.spr.hiperdino.controller.simulationForTesting.HiperdinoSimulation;
-import org.sni.spr.hiperdino.model.HiperdinoProduct;
 import org.sni.spr.hiperdino.controller.feeder.ProductFeeder;
+import org.sni.spr.hiperdino.controller.simulationForTesting.HiperdinoSimulation;
 import org.sni.spr.hiperdino.controller.store.Store;
+import org.sni.spr.hiperdino.model.HiperdinoProduct;
 
 import javax.jms.JMSException;
+import java.time.*;
 import java.util.List;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Controller {
     private final ProductFeeder productFeeder;
     private final Store store;
+    // Pool para no bloquear el hilo del Scheduler ni de Playwright
+    private final ExecutorService storeExecutor = Executors.newFixedThreadPool(10);
 
     public Controller(ProductFeeder productFeeder, Store store) {
         this.productFeeder = productFeeder;
@@ -24,52 +25,67 @@ public class Controller {
     public void startScheduler() {
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Atlantic/Canary"));
-        ZonedDateTime nextRun = now.withHour(19).withMinute(0).withSecond(0);
-        if (now.compareTo(nextRun) > 0) {
+        ZonedDateTime nextRun = now.withHour(19).withMinute(0).withSecond(0).withNano(0);
+
+        if (now.isAfter(nextRun)) {
             nextRun = nextRun.plusDays(1);
         }
+
         long initialDelay = Duration.between(now, nextRun).toSeconds();
+
+        System.out.println("📅 Scheduler iniciado. Próxima ejecución: " + nextRun);
+
         scheduler.scheduleAtFixedRate(() -> {
             try {
                 init();
             } catch (Exception e) {
-                e.printStackTrace();
+                System.err.println("Error en la ejecución programada: " + e.getMessage());
             }
         }, initialDelay, TimeUnit.DAYS.toSeconds(1), TimeUnit.SECONDS);
     }
 
-    public void init() throws JMSException {
+    public void init() {
+        System.out.println("Iniciando extracción y envío en tiempo real...");
         long startTime = System.currentTimeMillis();
-        List<HiperdinoProduct> products = productFeeder.extractAndTransformProducts();
-        store.storeAllData(products);
+        AtomicInteger counter = new AtomicInteger(0);
+
+        productFeeder.extractAndStream(product -> {
+            processAndStore(product);
+            counter.incrementAndGet();
+        });
+
         long endTime = System.currentTimeMillis();
-        long durationMillis = endTime - startTime;
-        double seconds = durationMillis / 1000.0;
-        long minutes = (long) seconds / 60;
-        double remainingSeconds = seconds % 60;
-        System.out.println("---");
-        System.out.println("Proceso finalizado con éxito.");
-        System.out.printf("Duración total: %d min y %.2f seg (Total: %.2f seg)%n",
-                minutes, remainingSeconds, seconds);
-        System.out.println("---");
+        printSummary("Proceso Real", counter.get(), startTime, endTime);
     }
 
-
-    public void initSimulation() throws JMSException {
-        System.out.println("=== INICIANDO SIMULACIÓN DE CARGA (ActiveMQ) ===");
+    public void initSimulation() {
+        System.out.println("🧪 Iniciando SIMULACIÓN de carga...");
         long startTime = System.currentTimeMillis();
+        AtomicInteger counter = new AtomicInteger(0);
+
         HiperdinoSimulation simulation = new HiperdinoSimulation();
-        List<HiperdinoProduct> mockProducts = simulation.init();
-        int totalProducts = mockProducts.size();
-        System.out.println("Simulador: Generados " + totalProducts + " productos de prueba.");
-        System.out.println("Enviando datos al broker de mensajería...");
-        store.storeAllData(mockProducts);
+        List<HiperdinoProduct> productList = simulation.init();
+        store.storeAllData(productList);
         long endTime = System.currentTimeMillis();
-        double durationSeconds = (endTime - startTime) / 1000.0;
-        System.out.println("---");
-        System.out.println("Simulación finalizada con éxito.");
-        System.out.printf("Se han procesado y enviado %d mensajes a ActiveMQ.%n", totalProducts);
-        System.out.printf("Tiempo de ejecución de simulación: %.3f segundos.%n", durationSeconds);
-        System.out.println("---");
+        printSummary("Simulación", counter.get(), startTime, endTime);
+    }
+
+    private void processAndStore(HiperdinoProduct product) {
+        storeExecutor.submit(() -> {
+            try {
+                store.storeSingleData(product);
+            } catch (Exception e) {
+                System.err.println("Error enviando producto " + product.getHiperdinoEventId() + ": " + e.getMessage());
+            }
+        });
+    }
+
+    private void printSummary(String type, int total, long start, long end) {
+        double seconds = (end - start) / 1000.0;
+        System.out.println("\n--- SUMMARY ---");
+        System.out.println("Tipo: " + type);
+        System.out.println("Productos procesados: " + total);
+        System.out.printf("Tiempo total: %.2f segundos%n", seconds);
+        System.out.println("----------------\n");
     }
 }

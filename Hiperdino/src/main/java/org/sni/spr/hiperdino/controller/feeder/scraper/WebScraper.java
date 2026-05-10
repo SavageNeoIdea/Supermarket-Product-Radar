@@ -1,7 +1,8 @@
 package org.sni.spr.hiperdino.controller.feeder.scraper;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public interface WebScraper {
-    public  List<Map<String, String>> extractProductRawData();
+    void startScraping(Consumer<List<String>> rawDataConsumer);
 }

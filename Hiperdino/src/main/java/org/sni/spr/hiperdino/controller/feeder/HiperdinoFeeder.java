@@ -1,19 +1,20 @@
 package org.sni.spr.hiperdino.controller.feeder;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.sni.spr.hiperdino.controller.feeder.parser.ProductParser;
 import org.sni.spr.hiperdino.controller.feeder.scraper.WebScraper;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
-import org.sni.spr.hiperdino.model.UnitsOfMeasurement;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Consumer;
 
 public class HiperdinoFeeder implements ProductFeeder {
 
     private final ProductParser productParser;
     private final WebScraper webScraper;
     private final List<HiperdinoProduct> productList = new ArrayList<>();
+    private final ObjectMapper mapper = new ObjectMapper();
 
     public HiperdinoFeeder(ProductParser productParser, WebScraper webScraper) {
         this.productParser = productParser;
@@ -21,20 +22,47 @@ public class HiperdinoFeeder implements ProductFeeder {
     }
 
     @Override
-    public List<HiperdinoProduct> extractAndTransformProducts() {
-        List<Map<String, String>> rawProductsList = webScraper.extractProductRawData();
-        for (Map<String, String> rawProductData : rawProductsList) {
-            productList.addAll(formatProduct(rawProductData));
-        }
+    public void extractAndStream(Consumer<HiperdinoProduct> productConsumer) {
+        webScraper.startScraping(rawJsonList -> {
+            processRawAndEmit(rawJsonList, productConsumer);
+        });
+    }
 
-        return productList;
+    @Override
+    public void processRawAndEmit(List<String> rawJson, Consumer<HiperdinoProduct> productConsumer) {
+        try {
+            JsonNode root = mapper.readTree(rawJson.getFirst());
+            JsonNode productsNode = root.has("productGtmData") ? root.get("productGtmData") : root;
+            productsNode.fields().forEachRemaining(entry -> {
+                JsonNode p = entry.getValue();
+                Map<String, String> rawData = convertNodeToMap(p, rawJson);
+                List<HiperdinoProduct> products = formatProduct(rawData);
+                products.forEach(productConsumer);
+            });
+        } catch (Exception e) {
+            System.err.println("Error procesando JSON de JSONs: " + e.getMessage());
+        }
+    }
+
+    private Map<String, String> convertNodeToMap(JsonNode node, List<String> rawJson) {
+        Map<String, String> map = new LinkedHashMap<>();
+        map.put("sku", node.path("sku").asText());
+        map.put("ean", node.path("ean").asText());
+        map.put("brand", node.path("label_brand").asText());
+        map.put("category", rawJson.get(1));
+        map.put("subcategory", rawJson.getLast());
+        map.put("name", node.path("name").asText());
+        map.put("price", node.path("final_price").asText());
+        map.put("image_url", node.path("image").asText());
+        map.put("gluten", node.path("sin_gluten").asText());
+        return map;
     }
 
     private List<HiperdinoProduct> formatProduct(Map<String, String> rawProduct) {
         productParser.identify(rawProduct.get("name"));
         List<HiperdinoProduct> hiperdinoProductList = new ArrayList<>();
-        if (rawProduct.get("ean") == null || rawProduct.get("ean").isBlank())
-            return List.of();
+        if (rawProduct.get("ean") == null || rawProduct.get("ean").isBlank()) return List.of();
+
         String[] eans = rawProduct.get("ean").split("\\s*,\\s*");
         for (String ean : eans){
             hiperdinoProductList.add(new HiperdinoProduct(

@@ -7,5 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface Store {
-    public void storeAllData(List<HiperdinoProduct> productList) throws JMSException;
+    void storeSingleData(HiperdinoProduct product);
+    void storeAllData(List<HiperdinoProduct> productList);
+    void close();
 }
