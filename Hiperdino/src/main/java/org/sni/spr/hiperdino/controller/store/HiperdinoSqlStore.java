@@ -63,22 +63,25 @@ public class HiperdinoSqlStore implements Store {
             conn.setAutoCommit(false);
 
             for (HiperdinoProduct product : productList) {
-                statement.setString(1, product.getSku());
-                statement.setString(2, product.getTimestamp().toString());
-                statement.setString(3, product.getEan());
-                statement.setString(5, product.getBrand());
-                statement.setString(6, product.getCategory());
-                statement.setString(7, product.getSubcategory());
-                statement.setString(8, product.getName());
-                statement.setInt(9, product.getQty());
-                statement.setInt(10, product.getPackageQty());
-                statement.setString(11, product.getMeasure());
-                statement.setDouble(12, product.getPrice());
-                statement.setInt(13, product.isGluten() ? 1 : 0);
-                statement.setString(14, product.getUrlImage());
+
+                statement.setString(1, product.getHiperdinoSku());
+                statement.setString(2, product.getHiperdinoTs().toString());
+                statement.setString(3, product.getHiperdinoEan());
+                statement.setString(4, product.getHiperdinoEventId().toString());
+                statement.setString(5, product.getHiperdinoBrand());
+                statement.setString(6, product.getHiperdinoCategory());
+                statement.setString(7, product.getHiperdinoSubcategory());
+                statement.setString(8, product.getHiperdinoName());
+                statement.setInt(9, product.getHiperdinoQty());
+                statement.setInt(10, product.getHiperdinoPackageQty());
+                statement.setString(11, product.getHiperdinoMeasure());
+                statement.setDouble(12, product.getHiperdinoPrice());
+                statement.setInt(13, product.getHiperdinoGluten() ? 1 : 0);
+                statement.setString(14, product.getHiperdinoUrlImage());
 
                 statement.addBatch();
             }
+
             int[] results = statement.executeBatch();
             conn.commit();
             System.out.println("Insertados " + results.length + " productos.");

@@ -24,27 +24,34 @@ public class HiperdinoFeeder implements ProductFeeder {
     public List<HiperdinoProduct> extractAndTransformProducts() {
         List<Map<String, String>> rawProductsList = webScraper.extractProductRawData();
         for (Map<String, String> rawProductData : rawProductsList) {
-            productList.add(formatProduct(rawProductData));
+            productList.addAll(formatProduct(rawProductData));
         }
+
         return productList;
     }
 
-    private HiperdinoProduct formatProduct(Map<String, String> rawProduct) {
+    private List<HiperdinoProduct> formatProduct(Map<String, String> rawProduct) {
         productParser.identify(rawProduct.get("name"));
-
-        return new HiperdinoProduct(
-                rawProduct.get("sku"),
-                rawProduct.get("ean"),
-                rawProduct.get("brand"),
-                rawProduct.get("category"),
-                rawProduct.get("subcategory"),
-                productParser.getName(),
-                productParser.getQty(),
-                productParser.getPackageQty(),
-                productParser.getMeasure(),
-                productParser.getRawPriceAsDouble(rawProduct.get("price")),
-                Boolean.parseBoolean(rawProduct.get("gluten")),
-                rawProduct.get("image_url")
-        );
+        List<HiperdinoProduct> hiperdinoProductList = new ArrayList<>();
+        if (rawProduct.get("ean") == null || rawProduct.get("ean").isBlank())
+            return List.of();
+        String[] eans = rawProduct.get("ean").split("\\s*,\\s*");
+        for (String ean : eans){
+            hiperdinoProductList.add(new HiperdinoProduct(
+                    rawProduct.get("sku"),
+                    ean,
+                    rawProduct.get("brand"),
+                    rawProduct.get("category"),
+                    rawProduct.get("subcategory"),
+                    productParser.getName(),
+                    productParser.getQty(),
+                    productParser.getPackageQty(),
+                    productParser.getMeasure(),
+                    productParser.getRawPriceAsDouble(rawProduct.get("price")),
+                    Boolean.parseBoolean(rawProduct.get("gluten")),
+                    rawProduct.get("image_url")
+            ));
+        }
+        return hiperdinoProductList;
     }
 }

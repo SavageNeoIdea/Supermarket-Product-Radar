@@ -1,70 +1,131 @@
 package org.sni.spr.hiperdino.model;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.UUID;
 
 public class HiperdinoProduct {
 
-    private final String sku;
-    private final String ean;
-    private final String brand;
-    private final String category;
-    private final String subcategory;
-    private final String name;
-    private final int packageQty;
-    private final int qty;
-    private final UnitsOfMeasurement measure;
-    private final double price;
-    private final Boolean gluten;
-    private final String urlImage;
-    private final LocalDateTime timestamp = LocalDateTime.now();
+    private final UUID hiperdinoEventId = UUID.randomUUID();
+    private final Instant hiperdinoTs = Instant.now();
+    private final String hiperdinoSku;
+    private final String hiperdinoEan;
+    private final String hiperdinoBrand;
+    private final String hiperdinoCategory;
+    private final String hiperdinoSubcategory;
+    private final String hiperdinoName;
+    private final int hiperdinoPackageQty;
+    private final int hiperdinoQty;
+    private final UnitsOfMeasurement hiperdinoMeasure;
+    private final double hiperdinoPrice;
+    private final Boolean hiperdinoGluten;
+    private final String hiperdinoUrlImage;
 
-    public HiperdinoProduct(String sku, String ean, String brand,
-                            String category, String subcategory, String name,
-                            int qty, int packageQty, UnitsOfMeasurement measure,
-                            double price, boolean gluten, String urlImage) {
-        this.sku = sku;
-        this.ean = ean;
-        this.brand = brand;
-        this.category = category;
-        this.subcategory = subcategory;
-        this.name = name;
-        this.qty = qty;
-        this.packageQty = packageQty;
-        this.measure = measure;
-        this.price = price;
-        this.gluten = gluten;
-        this.urlImage = urlImage;
+    public HiperdinoProduct(
+            String hiperdinoSku,
+            String hiperdinoEan,
+            String hiperdinoBrand,
+            String hiperdinoCategory,
+            String hiperdinoSubcategory,
+            String hiperdinoName,
+            int hiperdinoQty,
+            int hiperdinoPackageQty,
+            UnitsOfMeasurement hiperdinoMeasure,
+            double hiperdinoPrice,
+            boolean hiperdinoGluten,
+            String hiperdinoUrlImage
+    ) {
+
+        this.hiperdinoSku = hiperdinoSku;
+        this.hiperdinoEan = hiperdinoEan;
+        this.hiperdinoBrand = hiperdinoBrand;
+        this.hiperdinoCategory = hiperdinoCategory;
+        this.hiperdinoSubcategory = hiperdinoSubcategory;
+        this.hiperdinoName = hiperdinoName;
+        this.hiperdinoQty = hiperdinoQty;
+        this.hiperdinoPackageQty = hiperdinoPackageQty;
+        this.hiperdinoMeasure = hiperdinoMeasure;
+        this.hiperdinoPrice = hiperdinoPrice;
+        this.hiperdinoGluten = hiperdinoGluten;
+        this.hiperdinoUrlImage = hiperdinoUrlImage;
     }
-
 
     @Override
     public String toString() {
         return "HiperdinoProduct{" +
-                "sku='" + sku + '\'' +
-                ", ean='" + ean + '\'' +
-                ", brand='" + brand + '\'' +
-                ", name='" + name + '\'' +
-                ", price=" + price +
-                ", category='" + category + '\'' +
-                ", subcategory='" + subcategory + '\'' +
-                ", qty=" + qty +
-                " " + measure +
-                ", gluten=" + gluten +
-                ", timestamp=" + timestamp +
+                "hiperdinoEventId=" + hiperdinoEventId +
+                ", hiperdinoTs=" + hiperdinoTs +
+                ", hiperdinoSku='" + hiperdinoSku + '\'' +
+                ", hiperdinoEan='" + hiperdinoEan + '\'' +
+                ", hiperdinoBrand='" + hiperdinoBrand + '\'' +
+                ", hiperdinoCategory='" + hiperdinoCategory + '\'' +
+                ", hiperdinoSubcategory='" + hiperdinoSubcategory + '\'' +
+                ", hiperdinoName='" + hiperdinoName + '\'' +
+                ", hiperdinoPackageQty=" + hiperdinoPackageQty +
+                ", hiperdinoQty=" + hiperdinoQty +
+                ", hiperdinoMeasure=" + hiperdinoMeasure +
+                ", hiperdinoPrice=" + hiperdinoPrice +
+                ", hiperdinoGluten=" + hiperdinoGluten +
+                ", hiperdinoUrlImage='" + hiperdinoUrlImage + '\'' +
                 '}';
     }
 
-    public String getSku() {return sku;}
-    public String getEan() {return ean;}
-    public String getBrand() {return brand;}
-    public String getCategory() {return category;}
-    public String getSubcategory() {return subcategory;}
-    public String getName() {return name;}
-    public int getQty() {return qty;}
-    public int getPackageQty() {return packageQty;}
-    public String getMeasure() {return measure.name();}
-    public double getPrice() {return price;}
-    public boolean isGluten() {return gluten;}
-    public String getUrlImage() {return urlImage;}
-    public LocalDateTime getTimestamp() {return timestamp;}
+    public UUID getHiperdinoEventId() {
+        return hiperdinoEventId;
+    }
+
+    public Instant getHiperdinoTs() {
+        return hiperdinoTs;
+    }
+
+    public String getHiperdinoSku() {
+        return hiperdinoSku;
+    }
+
+    public String getHiperdinoEan() {
+        return hiperdinoEan;
+    }
+
+    public String getHiperdinoBrand() {
+        return hiperdinoBrand;
+    }
+
+    public String getHiperdinoCategory() {
+        return hiperdinoCategory;
+    }
+
+    public String getHiperdinoSubcategory() {
+        return hiperdinoSubcategory;
+    }
+
+    public String getHiperdinoName() {
+        return hiperdinoName;
+    }
+
+    public int getHiperdinoPackageQty() {
+        return hiperdinoPackageQty;
+    }
+
+    public int getHiperdinoQty() {
+        return hiperdinoQty;
+    }
+
+    public String getHiperdinoMeasure() {
+        return hiperdinoMeasure.name();
+    }
+
+    public UnitsOfMeasurement getHiperdinoMeasureEnum() {
+        return hiperdinoMeasure;
+    }
+
+    public double getHiperdinoPrice() {
+        return hiperdinoPrice;
+    }
+
+    public Boolean getHiperdinoGluten() {
+        return hiperdinoGluten;
+    }
+
+    public String getHiperdinoUrlImage() {
+        return hiperdinoUrlImage;
+    }
 }

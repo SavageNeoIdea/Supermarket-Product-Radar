@@ -7,6 +7,7 @@ import org.sni.spr.hiperdino.model.HiperdinoProduct;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -62,10 +63,25 @@ public class ActiveMQStore implements Store {
     }
 
     private String wrapProduct(HiperdinoProduct product) {
-        Map<String, Object> event = new HashMap<>();
-        event.put("ts", LocalDateTime.now().toString());
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("sku", product.getHiperdinoSku());
+        payload.put("ean", product.getHiperdinoEan());
+        payload.put("brand", product.getHiperdinoBrand());
+        payload.put("category", product.getHiperdinoCategory());
+        payload.put("subcategory", product.getHiperdinoSubcategory());
+        payload.put("name", product.getHiperdinoName());
+        payload.put("qty", product.getHiperdinoQty());
+        payload.put("packageQty", product.getHiperdinoPackageQty());
+        payload.put("measure", product.getHiperdinoMeasure());
+        payload.put("price", product.getHiperdinoPrice());
+        payload.put("gluten", product.getHiperdinoGluten());
+        payload.put("urlImage", product.getHiperdinoUrlImage());
+
+        Map<String, Object> event = new LinkedHashMap<>();
+        event.put("uid", product.getHiperdinoEventId());
+        event.put("ts", product.getHiperdinoTs().toString());
         event.put("ss", "hiperdino");
-        event.put("payload", product);
+        event.put("payload", payload);
         return gson.toJson(event);
     }
 }

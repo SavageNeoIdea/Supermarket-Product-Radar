@@ -20,7 +20,7 @@ public class Main {
                     new HiperdinoFeeder(productParser, webScraper),
                     storer
             );
-            controller.initSimulation();
+            controller.init();
         } catch (Exception e) {
             System.err.println("Ocurrió un error durante el proceso: " + e.getMessage());
             e.printStackTrace();
