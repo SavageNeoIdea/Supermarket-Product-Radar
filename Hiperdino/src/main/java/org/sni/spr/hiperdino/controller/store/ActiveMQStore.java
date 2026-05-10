@@ -68,18 +68,18 @@ public class ActiveMQStore implements Store {
 
     private String wrapProduct(HiperdinoProduct product) {
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("sku", product.getHiperdinoSku());
-        payload.put("ean", product.getHiperdinoEan());
-        payload.put("brand", product.getHiperdinoBrand());
-        payload.put("category", product.getHiperdinoCategory());
-        payload.put("subcategory", product.getHiperdinoSubcategory());
-        payload.put("name", product.getHiperdinoName());
-        payload.put("qty", product.getHiperdinoQty());
-        payload.put("packageQty", product.getHiperdinoPackageQty());
-        payload.put("measure", product.getHiperdinoMeasure());
-        payload.put("price", product.getHiperdinoPrice());
-        payload.put("gluten", product.getHiperdinoGluten());
-        payload.put("urlImage", product.getHiperdinoUrlImage());
+        payload.put("hiperdinoSku", product.getHiperdinoSku());
+        payload.put("hiperdinoEan", product.getHiperdinoEan());
+        payload.put("hiperdinoBrand", product.getHiperdinoBrand());
+        payload.put("hiperdinoCategory", product.getHiperdinoCategory());
+        payload.put("hiperdinoSubcategory", product.getHiperdinoSubcategory());
+        payload.put("hiperdinoName", product.getHiperdinoName());
+        payload.put("hiperdinoQty", product.getHiperdinoQty());
+        payload.put("hiperdinoPackageQty", product.getHiperdinoPackageQty());
+        payload.put("hiperdinoMeasure", product.getHiperdinoMeasure());
+        payload.put("hiperdinoPrice", product.getHiperdinoPrice());
+        payload.put("hiperdinoGluten", product.getHiperdinoGluten());
+        payload.put("hiperdinoUrlImage", product.getHiperdinoUrlImage());
         Map<String, Object> event = new LinkedHashMap<>();
         event.put("uid", product.getHiperdinoEventId());
         event.put("ts", product.getHiperdinoTs().toString());
