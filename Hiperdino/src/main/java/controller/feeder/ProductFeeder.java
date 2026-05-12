@@ -13,58 +13,49 @@ public class ProductFeeder implements Feeder {
     @Override
     public List<Product> processData(Map<String, List<String>> rawJson) {
         List<Product> productList = new ArrayList<>();
+
+        if (rawJson == null) return productList;
+
         Set<String> sources = rawJson.keySet();
 
         for (String source : sources) {
-            for (String event : rawJson.get(source)) {
-                JsonObject json = JsonParser.parseString(event).getAsJsonObject();
-                String productName = json.get(source + "Name").getAsString(); //linea 21
-                double productPrice = json.get(source + "Price").getAsDouble();
-                String productMeasure = json.get(source + "Measure").getAsString();
-                int productQty = json.get(source + "Quantity").getAsInt();
-                int productPackageQty = json.get(source + "PackageQuantity").getAsInt();
-                String productEan = json.get(source + "Ean").getAsString();
-                String productBrand = json.get(source + "Brand").getAsString();
-                String productSource = source;
+            List<String> events = rawJson.get(source);
 
-                productList.add(new Product(
-                        productName,
-                        productPrice,
-                        productMeasure,
-                        productQty,
-                        productPackageQty,
-                        productEan,
-                        productBrand,
-                        productSource
-                        )
-                );
+            if (events == null) continue;
+
+            for (String event : events) {
+                Product product = processData(source, event);
+                if (product != null) {
+                    productList.add(product);
+                }
             }
-
         }
         return productList;
     }
 
     @Override
     public Product processData(String source, String event) {
-        JsonObject json = JsonParser.parseString(event).getAsJsonObject();
-        String productName = json.get(source + "Name").getAsString();
-        double productPrice = json.get(source + "Price").getAsDouble();
-        String productMeasure = json.get(source + "Measure").getAsString();
-        int productQty = json.get(source + "Quantity").getAsInt();
-        int productPackageQty = json.get(source + "PackageQuantity").getAsInt();
-        String productEan = json.get(source + "Ean").getAsString();
-        String productBrand = json.get(source + "Brand").getAsString();
-        String productSource = source;
+        if (event == null || event.trim().isEmpty()) return null;
 
-        return new Product(
-                        productName,
-                        productPrice,
-                        productMeasure,
-                        productQty,
-                        productPackageQty,
-                        productEan,
-                        productBrand,
-                        productSource
-        );
+        try {
+            JsonObject root = JsonParser.parseString(event).getAsJsonObject();
+            if (!root.has("payload")) return null;
+
+            JsonObject json = root.getAsJsonObject("payload");
+
+            String name = json.get(source + "Name").getAsString();
+            double price = json.get(source + "Price").getAsDouble();
+            String measure = json.get(source + "Measure").getAsString();
+            int qty = json.get(source + "Qty").getAsInt();
+            int pQty = json.get(source + "PackageQty").getAsInt();
+            String ean = json.get(source + "Ean").getAsString();
+            String brand = json.get(source + "Brand").getAsString();
+
+            return new Product(name, price, measure, qty, pQty, ean, brand, source);
+
+        } catch (Exception e) {
+            System.err.println("Error en " + source + ": " + e.getMessage());
+            return null;
+        }
     }
 }

@@ -1,4 +1,5 @@
 package controller;
+import controller.store.sqlite.SqLiteDatamartStore;
 import model.Product;
 import controller.reader.DataReader;
 import controller.feeder.Feeder;
@@ -19,6 +20,7 @@ public class Controller {
     public void init(){
         Map<String, List<String>> rawProducts = eventReader.readLastDay();
         List<Product> products = feeder.processData(rawProducts);
-        System.out.println(products);
+        SqLiteDatamartStore store = new SqLiteDatamartStore();
+        store.storeAllData(products);
     }
 }
