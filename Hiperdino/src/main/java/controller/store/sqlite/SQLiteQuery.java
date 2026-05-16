@@ -1,5 +1,4 @@
 package controller.store.sqlite;
-
 import com.google.gson.JsonObject;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -47,7 +46,6 @@ public class SQLiteQuery {
                     payload.addProperty(source + "Measure", rs.getString("measure"));
                     payload.addProperty(source + "Qty", rs.getInt("quantity"));
                     payload.addProperty(source + "PackageQty", rs.getInt("packageQuantity"));
-                    payload.addProperty(source + "Ean", rs.getString("ean"));
                     payload.addProperty(source + "Brand", rs.getString("brand"));
                     root.add("payload", payload);
                     jsonEventsList.add(root.toString());
@@ -68,7 +66,7 @@ public class SQLiteQuery {
 
     private static String buildQuery(String[] tokens) {
         StringBuilder queryBuilder = new StringBuilder(
-                "SELECT source, name, price, measure, quantity, packageQuantity, ean, brand FROM product WHERE "
+                "SELECT DISTINCT source, name, price, measure, quantity, packageQuantity, brand FROM product WHERE "
         );
         for (int i = 0; i < tokens.length; i++) {
             queryBuilder.append("name LIKE ?");

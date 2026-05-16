@@ -48,7 +48,11 @@ public class ProductFeeder implements Feeder {
             String measure = json.get(source + "Measure").getAsString();
             int qty = json.get(source + "Qty").getAsInt();
             int pQty = json.get(source + "PackageQty").getAsInt();
-            String ean = json.get(source + "Ean").getAsString();
+
+            String eanKey = source + "Ean";
+            String ean = json.has(eanKey) && !json.get(eanKey).isJsonNull()
+                    ? json.get(eanKey).getAsString()
+                    : "";
             String brand = json.get(source + "Brand").getAsString();
 
             return new Product(name, price, measure, qty, pQty, ean, brand, source);
