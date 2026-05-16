@@ -4,7 +4,7 @@ public final class Product {
 
     private final String name;
     private final double price;
-    private final String measure;
+    private final UnitsOfMeasurement measure;
     private final int quantity;
     private final int packageQuantity;
     private final String ean;
@@ -22,7 +22,7 @@ public final class Product {
 
         this.name = name;
         this.price = price;
-        this.measure = measure;
+        this.measure = UnitsOfMeasurement.valueOf(measure);
         this.quantity = quantity;
         this.packageQuantity = packageQuantity;
         this.ean = ean;
@@ -38,7 +38,7 @@ public final class Product {
         return price;
     }
 
-    public String getMeasure() {
+    public UnitsOfMeasurement getMeasure() {
         return measure;
     }
 

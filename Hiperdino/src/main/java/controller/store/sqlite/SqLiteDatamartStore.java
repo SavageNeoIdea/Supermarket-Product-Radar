@@ -29,7 +29,7 @@ public class SqLiteDatamartStore implements DatamartStore {
                 for (Product product : products) {
                     stmt.setString(1, product.getName());
                     stmt.setDouble(2, product.getPrice());
-                    stmt.setString(3, product.getMeasure());
+                    stmt.setString(3, product.getMeasure().toString());
                     stmt.setInt(4, product.getQuantity());
                     stmt.setInt(5, product.getPackageQuantity());
                     stmt.setString(6, product.getEan());

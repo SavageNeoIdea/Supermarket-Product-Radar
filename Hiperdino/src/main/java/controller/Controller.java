@@ -1,5 +1,5 @@
 package controller;
-import controller.shoppingListCreator.ShoppingListManager;
+import controller.shoppingListApp.AppManager;
 import controller.store.sqlite.SqLiteDatamartStore;
 import model.Product;
 import controller.reader.DataReader;
@@ -7,17 +7,16 @@ import controller.feeder.Feeder;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 
 public class Controller {
     private final DataReader eventReader;
     private final Feeder feeder;
-    private final ShoppingListManager shoppingListManager;
+    private final AppManager shoppingListManager;
 
     public Controller(DataReader eventReader, Feeder feeder) {
         this.eventReader = eventReader;
         this.feeder = feeder;
-        this.shoppingListManager = new ShoppingListManager(feeder);
+        this.shoppingListManager = new AppManager(feeder);
     }
 
     public void init() {

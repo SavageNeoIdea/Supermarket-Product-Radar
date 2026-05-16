@@ -1,21 +1,29 @@
-package controller.shoppingListCreator;
+package controller.shoppingListApp;
 
 import java.util.Scanner;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-public class ShoppingListCli {
+public class AppCli {
     private final Consumer<String> inputStream;
-    public ShoppingListCli(Consumer<String> inputStream) {
+    private final ShoppingListBuilder shoppingListBuilder;
+
+    public AppCli(Consumer<String> inputStream, ShoppingListBuilder shoppingListBuilder) {
         this.inputStream = inputStream;
+        this.shoppingListBuilder = shoppingListBuilder;
     }
+
     public void init(){
+        Scanner scanner = new Scanner(System.in);
+
         while (true) {
-            System.out.println("Bienvenido a la lista de compra automatica de Hiperdino!: elige una opción:" +
+            System.out.println("\nBienvenido a la lista de compra automatica de Hiperdino!: elige una opción:" +
                     "\n1. Crear lista de la compra" +
                     "\n2. Consultar una lista" +
-                    "\n3. Salir del programa:" +
+                    "\n3. Observar la lista creada actual" +
+                    "\n4. Salir del programa:" +
                     "\nResponde seleccionando uno de los números del teclado: ");
-            Scanner scanner = new Scanner(System.in);
+
             String input = scanner.nextLine().strip();
 
             switch (input) {
@@ -26,12 +34,16 @@ public class ShoppingListCli {
                 case "2" -> {
                     System.out.println("Consultando lista...");
                 }
-                case "3" -> System.out.println("Saliendo. ¡Gracias por comprar en Hiperdino!");
-
+                case "3" -> {
+                    System.out.println("Cargando tu lista actual...");
+                    System.out.println(shoppingListBuilder.saveMoneyShopList());
+                }
+                case "4" -> {
+                    System.out.println("Saliendo. ¡Gracias por comprar en Hiperdino!");
+                    return;
+                }
                 default -> System.out.println("Opción no válida, inténtalo de nuevo.");
             }
-
-            break;
         }
     }
 
@@ -50,5 +62,6 @@ public class ShoppingListCli {
             if (input.equalsIgnoreCase("fin") || input.isEmpty()) break;
             inputStream.accept(input);
         }
+        System.out.println("Lista de la compra guardada y procesada.");
     }
 }
