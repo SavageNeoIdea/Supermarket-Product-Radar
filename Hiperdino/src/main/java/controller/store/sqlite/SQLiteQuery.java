@@ -5,21 +5,17 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class SQLiteQuery {
 
-    public static Map<String, List<String>> searchQuery(String input) {
-        Map<String, List<String>> data = new LinkedHashMap<>();
-        List<String> jsonEventsList = new ArrayList<>();
+    public static  Map<String, Map<String, List<String>>> searchQuery(String input) {
+        Map<String, Map<String, List<String>>> data = new LinkedHashMap<>();
+        Map<String, List<String>> sourceEventMap = new HashMap<>();
 
         if (input == null || input.trim().isEmpty()) {
             System.out.println("El término de búsqueda está vacío.");
-            data.put(input, jsonEventsList);
+            data.put("", sourceEventMap);
             return data;
         }
 
@@ -48,7 +44,8 @@ public class SQLiteQuery {
                     payload.addProperty(source + "PackageQty", rs.getInt("packageQuantity"));
                     payload.addProperty(source + "Brand", rs.getString("brand"));
                     root.add("payload", payload);
-                    jsonEventsList.add(root.toString());
+                    sourceEventMap.computeIfAbsent(source, key -> new ArrayList<>())
+                            .add(root.toString());
                 }
             }
 
@@ -56,7 +53,7 @@ public class SQLiteQuery {
             throw new RuntimeException("Error ejecutando la búsqueda en la base de datos", e);
         }
 
-        data.put(input, jsonEventsList);
+        data.put(input, sourceEventMap);
         return data;
     }
 

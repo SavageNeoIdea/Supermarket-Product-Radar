@@ -1,54 +1,45 @@
 package controller.shoppingListCreator;
-
+import controller.feeder.Feeder;
+import controller.reader.DataReader;
 import controller.store.sqlite.SQLiteQuery;
-
+import model.Product;
 import java.util.*;
+import java.util.function.Consumer;
 
 public class ShoppingListManager {
 
-    public Map<String, String> products = new LinkedHashMap<>();
+    private final Feeder feeder;
     public final Map<String, Map<String, String>> alternatives = new HashMap<>();
-    public List<String> initialShopList = new ArrayList<>();
-    public List<Map<String, List<String>>> searchShopList = new ArrayList<>();
+    public List<String> customerInputs = new ArrayList<>();
+    public Map<String, List<Product>> productMap = new LinkedHashMap<>();
 
-    public void initShopList(){
-        System.out.println("===========================================");
-        System.out.println("   🛒 ASISTENTE DE LISTA DE COMPRAS 🛒    ");
-        System.out.println("===========================================");
-        System.out.println("Introduce los productos uno por uno.");
-        System.out.println("Escribe 'fin' o pulsa Enter en una línea vacía para terminar.");
-        System.out.println("-------------------------------------------");
-
-        Scanner sc = new Scanner(System.in);
-        while (true) {
-            System.out.print("> ");
-            String input = sc.nextLine().trim();
-            if (input.equalsIgnoreCase("fin") || input.isEmpty()) break;
-            initialShopList.add(input);
-        }
-
-        System.out.println("\n✅ Lista finalizada. Tienes " + initialShopList.size() + " productos en tu lista.");
-        System.out.println("Tus productos: " + initialShopList);
-        shopingListSearch();
+    public ShoppingListManager(Feeder feeder) {
+        this.feeder = feeder;
     }
 
-    public void shopingListSearch(){
-        for (String input : initialShopList){
-            searchShopList.add(SQLiteQuery.searchQuery(input));
-        }
+    public void initApp() {
+        Consumer<String> cliListener = this::processInput;
+        ShoppingListCli cli = new ShoppingListCli(cliListener);
+        cli.init();
+    }
 
-        for (Map<String, List<String>> inputData :  searchShopList){
-            for (Map.Entry<String, List<String>> data: inputData.entrySet()){
-                System.out.println(STR."Resultados de busqueda para el input: \{data.getKey()}");
-                for (String product :  data.getValue()){
-                    System.out.println(product);
+    private void processInput(String input) {
+        customerInputs.add(input);
+        Map<String, Map<String, List<String>>> data = SQLiteQuery.searchQuery(input);
+        Map<String, List<String>> sourceEventMap = data.get(input);
+        List<Product> productList = new ArrayList<>();
+
+        if (sourceEventMap != null) {
+            for (Map.Entry<String, List<String>> entry : sourceEventMap.entrySet()) {
+                for (String event : entry.getValue()){
+                    Product product = feeder.processData(entry.getKey(), event);
+                    productList.add(product);
                 }
             }
+            productMap.put(input, productList);
+            for (Product product : productList){
+                System.out.print(product.getName() + ", ");
+            }
         }
-
-    }
-
-    public void saveShopingList(){
-
     }
 }
