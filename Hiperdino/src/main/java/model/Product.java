@@ -8,7 +8,6 @@ public final class Product {
     private final int quantity;
     private final int packageQuantity;
     private final String ean;
-
     private final String brand;
     private final String source;
 
