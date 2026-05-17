@@ -76,7 +76,7 @@ public class ProductResponseHandler {
         page.waitForLoadState(LoadState.NETWORKIDLE);
         if (ThreadLocalRandom.current().nextDouble() > 0.7) {
             int randomMin = ThreadLocalRandom.current().nextInt(5000, 7000);
-            int randomMax = ThreadLocalRandom.current().nextInt(7000, 1200);
+            int randomMax = ThreadLocalRandom.current().nextInt(7001, 12000);
             humanWait(randomMin, randomMax);
         }
     }
