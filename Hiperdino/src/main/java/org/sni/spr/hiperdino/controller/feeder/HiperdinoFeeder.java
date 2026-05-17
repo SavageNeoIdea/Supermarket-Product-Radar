@@ -33,15 +33,28 @@ public class HiperdinoFeeder implements ProductFeeder {
         try {
             JsonNode root = mapper.readTree(rawJson.getFirst());
             JsonNode productsNode = root.has("productGtmData") ? root.get("productGtmData") : root;
+            List<HiperdinoProduct> allProductsInBatch = new ArrayList<>();
             productsNode.fields().forEachRemaining(entry -> {
                 JsonNode p = entry.getValue();
                 Map<String, String> rawData = convertNodeToMap(p, rawJson);
                 List<HiperdinoProduct> products = formatProduct(rawData);
-                products.forEach(productConsumer);
+                allProductsInBatch.addAll(products);
             });
+            sendProducts(productConsumer, allProductsInBatch);
         } catch (Exception e) {
             System.err.println("Error procesando JSON de JSONs: " + e.getMessage());
         }
+    }
+
+    private void sendProducts(Consumer<HiperdinoProduct> productConsumer, List<HiperdinoProduct> allProductsInBatch) {
+        Set<String> seenKeys = new HashSet<>();
+        List<HiperdinoProduct> uniqueProducts = allProductsInBatch.stream()
+                .filter(p -> {
+                    String uniqueKey = p.getHiperdinoName() + "_" + p.getHiperdinoEan();
+                    return seenKeys.add(uniqueKey);
+                })
+                .toList();
+        uniqueProducts.forEach(productConsumer);
     }
 
     private Map<String, String> convertNodeToMap(JsonNode node, List<String> rawJson) {
