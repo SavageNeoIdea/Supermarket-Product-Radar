@@ -10,14 +10,12 @@ import java.util.List;
 public class SQLiteStorer implements Storer {
 
     private static final String URL = "jdbc:sqlite:products.db";
-    private boolean initialized = false;
 
     private Connection connect() throws SQLException {
         return DriverManager.getConnection(URL);
     }
 
     public void init() {
-        if (initialized) return;
         String sql = """
             CREATE TABLE IF NOT EXISTS products (
                 id REAL NOT NULL,
@@ -39,7 +37,6 @@ public class SQLiteStorer implements Storer {
         try (Connection conn = connect();
              Statement statement = conn.createStatement()) {
             statement.execute(sql);
-            initialized = true;
         } catch (Exception e) {
             throw new RuntimeException("DB init failed", e);
         }
@@ -78,4 +75,7 @@ public class SQLiteStorer implements Storer {
             throw new RuntimeException("Error saving products", e);
         }
     }
+
+    @Override
+    public void close(){}
 }
