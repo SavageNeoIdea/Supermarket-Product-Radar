@@ -16,9 +16,11 @@ public class SQLiteDatabaseInitializer {
                 measure TEXT,
                 quantity INTEGER,
                 packageQuantity INTEGER,
-                ean TEXT,
+                ean TEXT NOT NULL,
                 brand TEXT,
-                source TEXT
+                source TEXT NOT NULL,
+                ts TEXT,
+                UNIQUE(ean, source)
             );
         """;
 

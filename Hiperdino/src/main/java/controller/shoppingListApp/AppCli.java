@@ -6,10 +6,12 @@ import java.util.function.Supplier;
 
 public class AppCli {
     private final Consumer<String> inputStream;
+    private final Supplier<String> cliShopListProvider;
     private final ShoppingListBuilder shoppingListBuilder;
 
-    public AppCli(Consumer<String> inputStream, ShoppingListBuilder shoppingListBuilder) {
+    public AppCli(Consumer<String> inputStream, Supplier<String> cliShopListProvider, ShoppingListBuilder shoppingListBuilder) {
         this.inputStream = inputStream;
+        this.cliShopListProvider = cliShopListProvider;
         this.shoppingListBuilder = shoppingListBuilder;
     }
 
@@ -33,10 +35,11 @@ public class AppCli {
                 }
                 case "2" -> {
                     System.out.println("Consultando lista...");
+                    System.out.println();
                 }
                 case "3" -> {
                     System.out.println("Cargando tu lista actual...");
-                    System.out.println(shoppingListBuilder.saveMoneyShopList());
+                    System.out.println(cliShopListProvider.get());
                 }
                 case "4" -> {
                     System.out.println("Saliendo. ¡Gracias por comprar en Hiperdino!");

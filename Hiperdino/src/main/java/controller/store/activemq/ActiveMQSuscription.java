@@ -1,9 +1,11 @@
 package controller.store.activemq;
 
 import controller.feeder.Feeder;
+import controller.store.DatamartStore;
 import model.Product;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import javax.jms.*;
+import java.util.List;
 
 public class ActiveMQSuscription implements MessageListener, Subscriptor {
 
@@ -15,9 +17,11 @@ public class ActiveMQSuscription implements MessageListener, Subscriptor {
     private Connection connection;
     private Session session;
     private Feeder dataPreprocessor;
+    private final DatamartStore datamartStore;
 
-    public ActiveMQSuscription(Feeder dataPreprocessor) {
+    public ActiveMQSuscription(Feeder dataPreprocessor, DatamartStore datamartStore) {
         this.dataPreprocessor = dataPreprocessor;
+        this.datamartStore = datamartStore;
     }
 
     @Override
@@ -49,13 +53,18 @@ public class ActiveMQSuscription implements MessageListener, Subscriptor {
             if (message instanceof TextMessage textMessage) {
                 String event = textMessage.getText();
                 String source = message.getStringProperty("ss");
-                Product product =
-                        dataPreprocessor.processData(source, event);
-                //todo: actualmente no estoy seguro de como usar los mensajes para aportar valor
-                // a la aplicación por ahora solo se calcula el product y ya.
+                Product product = dataPreprocessor.processData(source, event);
+
+                if (product != null) {
+                    datamartStore.storeAllData(List.of(product));
+                }
             }
 
         } catch (JMSException e) {
+            System.err.println("Error de JMS al recibir el mensaje de datos en vivo");
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("Error inesperado procesando el mensaje en vivo");
             e.printStackTrace();
         }
     }

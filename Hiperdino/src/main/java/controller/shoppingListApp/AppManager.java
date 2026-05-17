@@ -4,6 +4,7 @@ import controller.store.sqlite.SQLiteQuery;
 import model.Product;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class AppManager {
 
@@ -17,8 +18,13 @@ public class AppManager {
 
     public void initApp() {
         Consumer<String> cliListener = this::processInput;
-        AppCli cli = new AppCli(cliListener, builder);
+        Supplier<String> cliShopListProvider = this::ShopListInput;
+        AppCli cli = new AppCli(cliListener, cliShopListProvider, builder);
         cli.init();
+    }
+
+    private String ShopListInput() {
+        return builder.buildShopList();
     }
 
     private void processInput(String input) {

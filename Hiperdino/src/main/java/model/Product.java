@@ -10,6 +10,7 @@ public final class Product {
     private final String ean;
     private final String brand;
     private final String source;
+    private final String ts; //
 
     public Product(String name,
                    double price,
@@ -18,7 +19,8 @@ public final class Product {
                    int packageQuantity,
                    String ean,
                    String ProductBrand,
-                   String ProductSource) {
+                   String ProductSource,
+                   String ts) { //
 
         this.name = name;
         this.price = price;
@@ -28,6 +30,7 @@ public final class Product {
         this.ean = ean;
         this.brand = ProductBrand;
         this.source = ProductSource;
+        this.ts = ts; //
     }
 
     public String getName() {
@@ -62,17 +65,22 @@ public final class Product {
         return source;
     }
 
+    public String getTs() { //
+        return ts;
+    }
+
     @Override
     public String toString() {
         return "Product{" +
                 "name='" + name + '\'' +
                 ", price=" + price +
-                ", measure='" + measure + '\'' +
+                ", measure=" + measure +
                 ", quantity=" + quantity +
                 ", packageQuantity=" + packageQuantity +
                 ", ean='" + ean + '\'' +
-                ", brand=" + brand +
-                ", source=" + source +
+                ", brand='" + brand + '\'' +
+                ", source='" + source + '\'' +
+                ", ts='" + ts + '\'' + //
                 '}';
     }
 }

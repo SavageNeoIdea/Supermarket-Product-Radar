@@ -41,6 +41,10 @@ public class ProductFeeder implements Feeder {
             JsonObject root = JsonParser.parseString(event).getAsJsonObject();
             if (!root.has("payload")) return null;
 
+            String ts = root.has("ts") && !root.get("ts").isJsonNull()
+                    ? root.get("ts").getAsString()
+                    : "";
+
             JsonObject json = root.getAsJsonObject("payload");
 
             String name = json.get(source + "Name").getAsString();
@@ -55,8 +59,7 @@ public class ProductFeeder implements Feeder {
                     : "";
             String brand = json.get(source + "Brand").getAsString();
 
-            return new Product(name, price, measure, qty, pQty, ean, brand, source);
-
+            return new Product(name, price, measure, qty, pQty, ean, brand, source, ts);
         } catch (Exception e) {
             System.err.println("Error en " + source + ": " + e.getMessage());
             return null;
