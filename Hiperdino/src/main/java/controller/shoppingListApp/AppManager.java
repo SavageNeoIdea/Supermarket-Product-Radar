@@ -1,6 +1,6 @@
 package controller.shoppingListApp;
 import controller.feeder.Feeder;
-import controller.store.sqlite.SQLiteQuery;
+import controller.store.SearchQuery;
 import model.Product;
 import java.util.*;
 import java.util.function.Consumer;
@@ -9,11 +9,14 @@ import java.util.function.Supplier;
 public class AppManager {
 
     private final Feeder feeder;
+    private final SearchQuery searchQuery;
     public List<String> customerInputs = new ArrayList<>();
-    public ShoppingListBuilder builder = new ShoppingListBuilder();
+    public ShoppingListBuilder builder;
 
-    public AppManager(Feeder feeder) {
+    public AppManager(Feeder feeder, SearchQuery searchQuery) {
         this.feeder = feeder;
+        this.searchQuery = searchQuery;
+        this.builder = new ShoppingListBuilder();
     }
 
     public void initApp() {
@@ -29,7 +32,7 @@ public class AppManager {
 
     private void processInput(String input) {
         customerInputs.add(input);
-        Map<String, Map<String, List<String>>> data = SQLiteQuery.searchQuery(input);
+        Map<String, Map<String, List<String>>> data = searchQuery.searchQuery(input);
         Map<String, List<String>> sourceEventMap = data.get(input);
         if (sourceEventMap != null) {
             for (Map.Entry<String, List<String>> entry : sourceEventMap.entrySet()) {
