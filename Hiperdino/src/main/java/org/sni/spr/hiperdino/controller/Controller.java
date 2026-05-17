@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Controller {
     private final ProductFeeder productFeeder;
     private final Store store;
-    // Pool para no bloquear el hilo del Scheduler ni de Playwright
     private final ExecutorService storeExecutor = Executors.newFixedThreadPool(10);
 
     public Controller(ProductFeeder productFeeder, Store store) {
@@ -48,21 +47,18 @@ public class Controller {
         System.out.println("Iniciando extracción y envío en tiempo real...");
         long startTime = System.currentTimeMillis();
         AtomicInteger counter = new AtomicInteger(0);
-
         productFeeder.extractAndStream(product -> {
             processAndStore(product);
             counter.incrementAndGet();
         });
-
         long endTime = System.currentTimeMillis();
         printSummary("Proceso Real", counter.get(), startTime, endTime);
     }
 
     public void initSimulation() {
-        System.out.println("🧪 Iniciando SIMULACIÓN de carga...");
+        System.out.println("Iniciando SIMULACIÓN de carga...");
         long startTime = System.currentTimeMillis();
         AtomicInteger counter = new AtomicInteger(0);
-
         HiperdinoSimulation simulation = new HiperdinoSimulation();
         List<HiperdinoProduct> productList = simulation.init();
         store.storeAllData(productList);

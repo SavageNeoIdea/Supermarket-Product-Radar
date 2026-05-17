@@ -39,7 +39,6 @@ public class HiperdinoPlaywrightManager implements WebScraper {
         List<String> context = HiperdinoUrlParser.getCategorySubcategoryName(url);
         String category = context.get(1);
         String subcategory = context.get(2);
-
         emitFirstProductPage(category, subcategory);
         responseHandler = new ProductResponseHandler(page, url, jsonBody -> {
             currentDataConsumer.accept(List.of(jsonBody, category, subcategory));
@@ -129,9 +128,7 @@ public class HiperdinoPlaywrightManager implements WebScraper {
             page.navigate("https://www.hiperdino.es", new Page.NavigateOptions()
                     .setWaitUntil(WaitUntilState.NETWORKIDLE)
                     .setTimeout(90000));
-
             Thread.sleep(3000 + (int)(Math.random() * 2000));
-
         } catch (Exception e) {
             extracted(e);
             page.screenshot(new Page.ScreenshotOptions().setPath(java.nio.file.Paths.get("error.png")));
@@ -159,7 +156,6 @@ public class HiperdinoPlaywrightManager implements WebScraper {
     }
 
     private List<String> extractLinks() {
-
         List<String> urls = new ArrayList<>();
         String categoriesUrlCssSelector = ".sidebar-item--wrapper a.link--wrapper";
         List<Locator> categoriesUrls = page.

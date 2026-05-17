@@ -9,9 +9,7 @@ import org.sni.spr.hiperdino.controller.feeder.parser.HiperdinoProductParser;
 import org.sni.spr.hiperdino.controller.feeder.scraper.WebScraper;
 
 public class Main {
-
     public static void main(String[] args) {
-
         try {
             HiperdinoProductParser productParser = new HiperdinoProductParser();
             WebScraper webScraper = new HiperdinoPlaywrightManager("35010");

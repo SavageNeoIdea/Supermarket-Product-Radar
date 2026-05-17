@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 
 public class ProductResponseHandler {
     private final Consumer<String> onJsonCaptured;
-    private Page page;
+    private final Page page;
     private String subcategory;
     private final List<String> capturedResponses = new ArrayList<>();
 
@@ -75,8 +75,8 @@ public class ProductResponseHandler {
     private void stochasticWait() {
         page.waitForLoadState(LoadState.NETWORKIDLE);
         if (ThreadLocalRandom.current().nextDouble() > 0.7) {
-            int randomMin = ThreadLocalRandom.current().nextInt(2000, 4001);
-            int randomMax = ThreadLocalRandom.current().nextInt(5000, 8001);
+            int randomMin = ThreadLocalRandom.current().nextInt(5000, 7000);
+            int randomMax = ThreadLocalRandom.current().nextInt(7000, 1200);
             humanWait(randomMin, randomMax);
         }
     }

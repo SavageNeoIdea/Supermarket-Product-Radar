@@ -44,7 +44,6 @@ public class HiperdinoSqlStore implements Store {
             stmt.execute("PRAGMA journal_mode=WAL;");
             stmt.execute(createTableSql);
             System.out.println("Base de datos SQLite inicializada correctamente.");
-
         } catch (SQLException e) {
             System.err.println("Error inicializando DB: " + e.getMessage());
         }
@@ -57,10 +56,8 @@ public class HiperdinoSqlStore implements Store {
                 name, qty, package_qty, measure, price, gluten, image_url
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
-
         try {
             connection = DriverManager.getConnection(DB_URL);
-            // Precompilamos la consulta una sola vez
             insertStatement = connection.prepareStatement(insertSql);
         } catch (SQLException e) {
             System.err.println("Error abriendo conexión persistente: " + e.getMessage());
@@ -73,10 +70,8 @@ public class HiperdinoSqlStore implements Store {
             if (connection == null || connection.isClosed()) {
                 openConnection();
             }
-
             fillPreparedStatement(insertStatement, product);
             insertStatement.executeUpdate();
-
         } catch (SQLException e) {
             System.err.println("Error insertando producto " + product.getHiperdinoEventId() + ": " + e.getMessage());
         }
@@ -88,20 +83,15 @@ public class HiperdinoSqlStore implements Store {
             if (connection == null || connection.isClosed()) {
                 openConnection();
             }
-
             connection.setAutoCommit(false);
-
             for (HiperdinoProduct product : productList) {
                 fillPreparedStatement(insertStatement, product);
                 insertStatement.addBatch();
             }
-
             int[] results = insertStatement.executeBatch();
             connection.commit();
             connection.setAutoCommit(true);
-
             System.out.println("Insertados " + results.length + " productos en SQLite (Batch).");
-
         } catch (SQLException e) {
             System.err.println("Error en el batch de base de datos: " + e.getMessage());
             try {
