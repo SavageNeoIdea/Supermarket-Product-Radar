@@ -1,61 +1,63 @@
 package org.sni.spr.store;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializer;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.sni.spr.model.Product;
 
 import javax.jms.*;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 public class ActiveMQStorer implements Storer, AutoCloseable {
-    private static final String TOPIC_NAME = "events.product";
     private final Gson gson;
-    private final String source;
-    private final Connection connection;
-    private final Session session;
-    private final MessageProducer producer;
+    private final String brokerUrl;
+    private final String topicName;
+    private final String username;
+    private final String password;
+    private Connection connection;
+    private Session session;
+    private MessageProducer producer;
 
-    public ActiveMQStorer(String brokerUrl,
-                         String user,
-                         String password,
-                         String source) {
-        this.source = source;
-        this.gson = new GsonBuilder()
-                .registerTypeAdapter(LocalDateTime.class,
-                        (JsonSerializer<LocalDateTime>) (src, _, _) ->
-                                new JsonPrimitive(src.format(DateTimeFormatter.ISO_DATE_TIME))
-                )
-                .create();
+    public ActiveMQStorer() {
+        ConfigReader reader = new ConfigReader();
+        Map<String, String> config = reader.loadConfig("publishers", "mercadona");
+        if (config == null) {
+            throw new RuntimeException("ERROR: Could not load configuration for publisher 'mercadona'");
+        }
+        this.brokerUrl = config.get("brokerUrl");
+        this.topicName = config.get("topicName");
+        this.username = config.get("username");
+        this.password = config.get("password");
+        this.gson = new Gson();
+        connectToActiveMQ();
+    }
+
+    public void connectToActiveMQ() {
         try {
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
-            this.connection = factory.createConnection(user, password);
-            this.connection.start();
-            this.session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            Topic topic = session.createTopic(TOPIC_NAME);
-            this.producer = session.createProducer(topic);
-            System.out.println("Connected to ActiveMQ broker: " + brokerUrl);
+            connection = factory.createConnection(username, password);
+            connection.start();
+            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Topic topic = session.createTopic(topicName);
+            producer = session.createProducer(topic);
+            System.out.println("Connected to ActiveMQ and publisher ready for topic: " + topicName);
         } catch (JMSException e) {
-            throw new RuntimeException("Failed to initialize ActiveMQ connection", e);
+            throw new RuntimeException("Critical ActiveMQ error", e);
         }
     }
 
     @Override
     public void saveAll(List<Product> products) {
         try {
+            Instant batchTs = Instant.now();
             for (Product product : products) {
-                String jsonEvent = buildEvent(product);
+                String jsonEvent = buildEvent(product, batchTs);
                 TextMessage message = session.createTextMessage(jsonEvent);
                 message.setStringProperty("eventType", "product");
-                message.setStringProperty("source", source);
+                message.setStringProperty("source", "mercadona");
                 producer.send(message);
             }
             System.out.println("Published " + products.size() + " product events.");
@@ -64,7 +66,7 @@ public class ActiveMQStorer implements Storer, AutoCloseable {
         }
     }
 
-    private String buildEvent(Product product) {
+    private String buildEvent(Product product, Instant batchTs) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("id", product.getId());
         payload.put("ean", product.getEan());
@@ -80,8 +82,8 @@ public class ActiveMQStorer implements Storer, AutoCloseable {
         payload.put("urlImage", product.getThumbnail());
         Map<String, Object> event = new LinkedHashMap<>();
         event.put("uid", UUID.randomUUID());
-        event.put("ts", Instant.now().toString());
-        event.put("ss", source);
+        event.put("ts", batchTs.toString());
+        event.put("ss", "mercadona");
         event.put("payload", payload);
         return gson.toJson(event);
     }
@@ -89,9 +91,9 @@ public class ActiveMQStorer implements Storer, AutoCloseable {
     @Override
     public void close() {
         try {
-            producer.close();
-            session.close();
-            connection.close();
+            if (producer != null) producer.close();
+            if (session != null) session.close();
+            if (connection != null) connection.close();
             System.out.println("ActiveMQ connection closed.");
         } catch (JMSException e) {
             throw new RuntimeException("Failed to close ActiveMQ resources", e);

@@ -2,7 +2,7 @@
   "subscribers": {
     "eventStoreSubscriber": {
       "brokerUrl": "tcp://localhost:61616",
-      "topicName": "Products",
+      "topicName": "product",
       "clientId": "EventStoreBuilder_Subscriber",
       "subscriptionName": "MainEventStoreSub",
       "username": "admin",
