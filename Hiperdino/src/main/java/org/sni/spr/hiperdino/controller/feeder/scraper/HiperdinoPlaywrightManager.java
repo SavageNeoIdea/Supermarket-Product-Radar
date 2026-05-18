@@ -48,26 +48,11 @@ public class HiperdinoPlaywrightManager implements WebScraper {
         try {
             page.waitForFunction("() => typeof gtmProductDataObject !== 'undefined'");
             String gtmJson = (String) page.evaluate("() => JSON.stringify(gtmProductDataObject)");
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(gtmJson);
-
-            root.fields().forEachRemaining(entry -> {
-                JsonNode p = entry.getValue();
-                Map<String, String> map = new LinkedHashMap<>();
-                map.put("sku", p.path("sku").asText());
-                map.put("ean", p.path("ean").asText());
-                map.put("brand", p.path("label_brand").asText());
-                map.put("name", p.path("name").asText());
-                map.put("price", p.path("final_price").asText());
-                map.put("image_url", p.path("image").asText());
-                map.put("gluten", p.path("sin_gluten").asText());
-
-                if (gtmJson != null && !gtmJson.equals("{}"))
-                    currentDataConsumer.accept(List.of(gtmJson, category, subcategory));
-            });
-
+            if (gtmJson != null && !gtmJson.trim().equals("{}")) {
+                currentDataConsumer.accept(List.of(gtmJson, category, subcategory));
+            }
         } catch (Exception e) {
-            System.err.println("Error procesando GTM Data: " + e.getMessage());
+            System.err.println("Error extrayendo GTM Data inicial: " + e.getMessage());
         }
     }
 

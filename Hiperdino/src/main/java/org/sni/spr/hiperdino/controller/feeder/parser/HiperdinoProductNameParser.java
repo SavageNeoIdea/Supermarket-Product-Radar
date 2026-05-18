@@ -1,18 +1,15 @@
 package org.sni.spr.hiperdino.controller.feeder.parser;
-
 import org.sni.spr.hiperdino.model.UnitsOfMeasurement;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class HiperdinoProductParser implements ProductParser {
+public class HiperdinoProductNameParser implements ProductNameParser {
 
     private static final Pattern productTextpattern = Pattern.compile(
             "^(.*?)(?:\\s+(?:(\\d+)\\s*[xX]\\s*)?(\\d+)\\s*(ml|cl|l|g|kg|ud|uds\\.?)|\\s+(cm))$",
             Pattern.CASE_INSENSITIVE
     );
 
-    private String text;
     private String name;
     private int qty;
     private UnitsOfMeasurement measure;
@@ -20,34 +17,20 @@ public class HiperdinoProductParser implements ProductParser {
     private Matcher productMatcher;
 
     @Override
-    public void identify(String text){
-        this.text = text;
-        initMatcher();
+    public void identify(String productCompleteName) {
+        this.productMatcher = productTextpattern.matcher(productCompleteName);
         if (productMatcher.find()) {
             identifyAttrs();
+        } else {
+            this.name = productCompleteName.trim();
+            this.qty = 1;
+            this.packageQty = 1;
+            this.measure = UnitsOfMeasurement.ud;
         }
-    }
-
-    public void initMatcher() {
-        productMatcher = productTextpattern.matcher(text);
-    }
-
-    @Override
-    public double getRawPriceAsDouble(String priceStr) {
-        double price = 0.0;
-        if (priceStr != null && !priceStr.isEmpty()) {
-            try {
-                price = Double.parseDouble(priceStr.replace(",", "."));
-            } catch (NumberFormatException e) {
-                System.err.println("Error al convertir precio: " + priceStr);
-            }
-        }
-        return price;
     }
 
     private void identifyAttrs() {
         name = productMatcher.group(1).trim();
-
         if (productMatcher.group(5) != null) {
             qty = 1;
             packageQty = 1;
@@ -66,8 +49,12 @@ public class HiperdinoProductParser implements ProductParser {
         }
     }
 
+    @Override
     public String getName() { return name; }
+    @Override
     public int getQty() { return qty; }
+    @Override
     public UnitsOfMeasurement getMeasure() { return measure; }
+    @Override
     public int getPackageQty() { return packageQty; }
 }

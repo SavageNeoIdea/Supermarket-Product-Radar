@@ -10,7 +10,7 @@ public final class Product {
     private final String ean;
     private final String brand;
     private final String source;
-    private final String ts; //
+    private final String ts;
 
     public Product(String name,
                    double price,
@@ -20,7 +20,7 @@ public final class Product {
                    String ean,
                    String ProductBrand,
                    String ProductSource,
-                   String ts) { //
+                   String ts) {
 
         this.name = name;
         this.price = price;
@@ -30,7 +30,7 @@ public final class Product {
         this.ean = ean;
         this.brand = ProductBrand;
         this.source = ProductSource;
-        this.ts = ts; //
+        this.ts = ts;
     }
 
     public String getName() {

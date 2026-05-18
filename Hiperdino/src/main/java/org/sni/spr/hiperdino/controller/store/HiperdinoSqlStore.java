@@ -12,6 +12,25 @@ public class HiperdinoSqlStore implements Store {
     private static final String DB_URL = "jdbc:sqlite:myDB.db";
     private Connection connection;
     private PreparedStatement insertStatement;
+    private String createTableSql = """
+                                    CREATE TABLE IF NOT EXISTS products (
+                                        sku TEXT,
+                                        timestamp TEXT,
+                                        uid TEXT,
+                                        ean TEXT,
+                                        brand TEXT,
+                                        category TEXT,
+                                        subcategory TEXT,
+                                        name TEXT,
+                                        qty INTEGER,
+                                        package_qty INTEGER,
+                                        measure TEXT,
+                                        price REAL,
+                                        gluten INTEGER,
+                                        image_url TEXT,
+                                        PRIMARY KEY (sku, timestamp)
+                                    );
+                                """;
 
     public HiperdinoSqlStore() {
         initDatabase();
@@ -19,25 +38,6 @@ public class HiperdinoSqlStore implements Store {
     }
 
     private void initDatabase() {
-        String createTableSql = """
-                CREATE TABLE IF NOT EXISTS products (
-                    sku TEXT,
-                    timestamp TEXT,
-                    uid TEXT,
-                    ean TEXT,
-                    brand TEXT,
-                    category TEXT,
-                    subcategory TEXT,
-                    name TEXT,
-                    qty INTEGER,
-                    package_qty INTEGER,
-                    measure TEXT,
-                    price REAL,
-                    gluten INTEGER,
-                    image_url TEXT,
-                    PRIMARY KEY (sku, timestamp)
-                );
-            """;
 
         try (Connection conn = DriverManager.getConnection(DB_URL);
              Statement stmt = conn.createStatement()) {

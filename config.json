@@ -22,7 +22,8 @@
       "brokerUrl": "tcp://localhost:61616",
       "topicName": "product",
       "username": "admin",
-      "password": "admin"
+      "password": "admin",
+      "postalCode": "35010"
     },
     "mercadona": {
       "brokerUrl": "tcp://localhost:61616",

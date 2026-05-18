@@ -1,4 +1,4 @@
-package Controller;
+package controller;
 import store.Subscriptor;
 
 public class Controller {

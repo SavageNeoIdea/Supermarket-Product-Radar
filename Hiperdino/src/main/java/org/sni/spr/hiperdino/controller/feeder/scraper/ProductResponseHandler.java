@@ -1,9 +1,7 @@
 package org.sni.spr.hiperdino.controller.feeder.scraper;
-
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Response;
 import com.microsoft.playwright.options.LoadState;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -14,7 +12,7 @@ import java.util.function.Consumer;
 public class ProductResponseHandler {
     private final Consumer<String> onJsonCaptured;
     private final Page page;
-    private String subcategory;
+    private final String subcategory;
     private final List<String> capturedResponses = new ArrayList<>();
     private final Set<Integer> seenResponseHashes = new HashSet<>();
 
@@ -100,9 +98,4 @@ public class ProductResponseHandler {
     private void scrollPage(int height) {
         page.mouse().wheel(0, height);
     }
-
-    public List<String> getCapturedResponses() {
-        return capturedResponses;
-    }
-
 }
