@@ -7,7 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ActiveMQStore implements Store {
+public class ActivemqStore implements Store {
 
     private final Gson gson;
     private final String brokerUrl;
@@ -20,15 +20,13 @@ public class ActiveMQStore implements Store {
     private Topic topic;
     private MessageProducer producer;
 
-    public ActiveMQStore() {
-
+    public ActivemqStore() {
         ConfigReader reader = new ConfigReader();
         Map<String, String> config = reader.loadConfig("publishers", "hiperdino");
 
         if (config == null) {
             throw new RuntimeException("ERROR: Could not load configuration for publisher 'hiperdino'");
         }
-
         this.brokerUrl = config.get("brokerUrl");
         this.topicName = config.get("topicName");
         this.username = config.get("username");

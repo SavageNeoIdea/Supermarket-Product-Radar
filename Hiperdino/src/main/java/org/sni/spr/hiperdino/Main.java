@@ -1,6 +1,6 @@
 package org.sni.spr.hiperdino;
 
-import org.sni.spr.hiperdino.controller.store.ActiveMQStore;
+import org.sni.spr.hiperdino.controller.store.ActivemqStore;
 import org.sni.spr.hiperdino.controller.store.Store;
 import org.sni.spr.hiperdino.controller.Controller;
 import org.sni.spr.hiperdino.controller.feeder.HiperdinoFeeder;
@@ -13,12 +13,12 @@ public class Main {
         try {
             HiperdinoProductParser productParser = new HiperdinoProductParser();
             WebScraper webScraper = new HiperdinoPlaywrightManager("35010");
-            Store storer = new ActiveMQStore();
+            Store storer = new ActivemqStore();
             Controller controller = new Controller(
                     new HiperdinoFeeder(productParser, webScraper),
                     storer
             );
-            controller.init();
+            controller.startScheduler();
         } catch (Exception e) {
             System.err.println("Ocurrió un error durante el proceso: " + e.getMessage());
             e.printStackTrace();

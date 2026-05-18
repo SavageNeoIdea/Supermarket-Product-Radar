@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 public class HiperdinoPlaywrightManager implements WebScraper {
     private static final int LOWER_LIMIT = 13;
     private static final int DUPLICATED_MENU_OFFSET = 143;
+    private Browser browser;
     private Playwright playwright;
     private Page page;
     private String postalCode;
@@ -83,13 +84,12 @@ public class HiperdinoPlaywrightManager implements WebScraper {
 
     private void initScraperEngine() {
         playwright = Playwright.create();
-        Browser browser = initBrowser();
-        BrowserContext context = initBrowserContext(browser);
+        this.browser = initBrowser();
+        BrowserContext context = initBrowserContext(this.browser);
         initPage(context);
         testWebResponse();
         manageCookies();
         writePostalCode(postalCode);
-
     }
 
     private Browser initBrowser() {
@@ -165,7 +165,21 @@ public class HiperdinoPlaywrightManager implements WebScraper {
         return urls;
     }
 
-    public void close() {this.playwright.close();}
+    public void close() {
+        try {
+            if (page != null) {
+                page.close();
+            }
+            if (browser != null) {
+                browser.close();
+            }
+            if (playwright != null) {
+                playwright.close();
+            }
+        } catch (Exception e) {
+            System.err.println("Error durante el cierre del scraper: " + e.getMessage());
+        }
+    }
     public void fill(String inputLocation, String postalCode) {page.fill(inputLocation, postalCode);}
     public void click(String buttonLocation) {page.click(buttonLocation);}
 }

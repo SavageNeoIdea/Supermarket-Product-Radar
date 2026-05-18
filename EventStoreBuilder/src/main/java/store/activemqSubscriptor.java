@@ -5,27 +5,32 @@ import java.util.Map;
 
 public class activemqSubscriptor implements MessageListener, Subscriptor {
 
+    private final String brokerUrl;
+    private final String topicName;
+    private final String clientId;
+    private final String subscriptionName;
+
     private Connection connection;
     private Session session;
-    private EventStore eventStore;
+    private final EventStore eventStore;
 
     public activemqSubscriptor(EventStore eventStore) {
         this.eventStore = eventStore;
+        ConfigReader reader = new ConfigReader();
+        Map<String, String> config = reader.loadConfig("subscribers", "eventStoreSubscriber");
+        if (config == null) {
+            throw new RuntimeException("ERROR: Could not load configuration for eventStoreSubscriber");
+        }
+
+        this.brokerUrl = config.get("brokerUrl");
+        this.topicName = config.get("topicName");
+        this.clientId = config.get("clientId");
+        this.subscriptionName = config.get("subscriptionName");
     }
 
     @Override
     public void start() {
         try {
-            ConfigReader reader = new ConfigReader();
-            Map<String, String> config = reader.loadConfig("subscribers","eventStoreSubscriber");
-            if (config == null) {
-                System.err.println("ERROR: No se pudo cargar la configuración de eventStoreBuilder.");
-                return;
-            }
-            String brokerUrl = config.get("brokerUrl");
-            String topicName = config.get("topicName");
-            String clientId = config.get("clientId");
-            String subscriptionName = config.get("subscriptionName");
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
             factory.setTrustAllPackages(true);
             connection = factory.createConnection();
@@ -35,17 +40,18 @@ public class activemqSubscriptor implements MessageListener, Subscriptor {
             MessageConsumer consumer = session.createDurableSubscriber(topic, subscriptionName);
             consumer.setMessageListener(this);
             connection.start();
-            System.out.println("EventStoreBuilder: Suscrito al topic '" + topicName + "'. Esperando eventos...");
+            System.out.println("EventStoreBuilder: Subscribed to topic '" + topicName + "'");
+
         } catch (JMSException e) {
-            System.err.println("Error en el Suscriptor: " + e.getMessage());
+            System.err.println("Error starting subscriber: " + e.getMessage());
         }
     }
 
     @Override
     public void onMessage(Message message) {
         try {
-            if (message instanceof TextMessage) {
-                String json = ((TextMessage) message).getText();
+            if (message instanceof TextMessage textMessage) {
+                String json = textMessage.getText();
                 eventStore.saveEvent("Product", json);
             }
         } catch (JMSException e) {
