@@ -1,3 +1,4 @@
+package store;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,7 +30,6 @@ public class EventStore {
             Files.write(finalFile, entry.getBytes(),
                     StandardOpenOption.CREATE,
                     StandardOpenOption.APPEND);
-            System.out.println("Evento archivado en: " + topic + "/" + sourceSite);
         } catch (IOException e) {
             System.err.println("Error al persistir evento: " + e.getMessage());
         }
