@@ -1,7 +1,11 @@
+import Controller.Controller;
+import store.EventStore;
+import store.activemqSubscriptor;
+
 public class Main {
     public static void main(String[] args) {
         EventStore eventStore = new EventStore();
-        Suscriptor suscriptor = new Suscriptor(eventStore);
-        suscriptor.start();
+        Controller controller = new Controller(new activemqSubscriptor(eventStore));
+        controller.init();
     }
 }
