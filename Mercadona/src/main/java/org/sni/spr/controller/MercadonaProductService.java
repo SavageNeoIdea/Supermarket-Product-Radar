@@ -4,7 +4,8 @@ import com.google.gson.Gson;
 import org.sni.spr.model.*;
 
 import java.util.List;
-import java.util.Objects;
+import java.util.Random;
+import java.util.function.Consumer;
 
 public class MercadonaProductService implements ProductService {
     private final HttpClientManager httpClient;
@@ -15,18 +16,18 @@ public class MercadonaProductService implements ProductService {
     }
 
     @Override
-    public List<Product> getProducts(List<String> ids) {
-        return ids.stream()
-                .map(id -> {
+    public void getProducts(List<String> ids, Consumer<Product> consumer) {
+        ids.forEach(id -> {
             try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+                Thread.sleep(400 + new Random().nextInt(200));
+                Product product = fetchProduct(id);
+                if (product != null) {
+                    consumer.accept(product);
+                }
+            } catch (Exception e) {
+                System.err.println("Error procesando id=" + id + " - " + e.getMessage());
             }
-            return fetchProduct(id);
-        })
-                .filter(Objects::nonNull)
-                .toList();
+        });
     }
 
     private Product fetchProduct(String id) {

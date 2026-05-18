@@ -1,6 +1,5 @@
 package org.sni.spr.controller;
 
-import org.sni.spr.model.Product;
 import org.sni.spr.store.Storer;
 
 import java.time.*;
@@ -21,8 +20,7 @@ public class Controller {
 
     public void run(String sitemapUrl) {
         List<String> ids = provider.provideProductIDs(sitemapUrl);
-        List<Product> products = productService.getProducts(ids);
-        storer.saveAll(products);
+        productService.getProducts(ids, storer::save);
     }
 
     public void scheduleDailyRun(String sitemapUrl, LocalTime executionTime) {
