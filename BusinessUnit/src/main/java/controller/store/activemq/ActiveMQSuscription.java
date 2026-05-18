@@ -5,13 +5,8 @@ import controller.store.DatamartStore;
 import model.Product;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import javax.jms.*;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 public class ActiveMQSuscription implements MessageListener, Subscriptor {
 
@@ -23,10 +18,10 @@ public class ActiveMQSuscription implements MessageListener, Subscriptor {
     }
     @Override
     public void start() {
+        ConfigReader configReader = new ConfigReader();
         try {
-            Map<String, String> config = loadConfig("businessUnitSubscriber");
-            if (config.isEmpty()) {
-                System.err.println("ERROR: No se pudo encontrar o parsear la configuración de businessUnitSubscriber.");
+            Map<String, String> config = configReader.loadConfig("subscribers","businessUnitSubscriber");
+            if (config == null) {
                 return;
             }
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(config.get("brokerUrl"));
@@ -34,8 +29,7 @@ public class ActiveMQSuscription implements MessageListener, Subscriptor {
             Connection connection;
             String user = config.get("username");
             String pass = config.get("password");
-            if (user != null && !user.isEmpty() && !user.equals("null") &&
-                    pass != null && !pass.isEmpty() && !pass.equals("null")) {
+            if (user != null && !user.isEmpty() && pass != null && !pass.isEmpty()) {
                 connection = factory.createConnection(user, pass);
             } else {
                 connection = factory.createConnection();
@@ -52,44 +46,6 @@ public class ActiveMQSuscription implements MessageListener, Subscriptor {
         }
     }
 
-    private Map<String, String> loadConfig(String subscriberKey) {
-        Map<String, String> configMap = new HashMap<>();
-        File configFile = new File("config.json");
-        if (!configFile.exists()) {
-            configFile = new File("../config.json");
-        }
-        if (!configFile.exists()) {
-            System.err.println("ERROR CRÍTICO: No se encontró el archivo config.json en la ruta: " + configFile.getAbsolutePath());
-            return configMap;
-        }
-        try (BufferedReader reader = new BufferedReader(new FileReader(configFile))) {
-            StringBuilder contentBuilder = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                contentBuilder.append(line);
-            }
-            String content = contentBuilder.toString();
-            if (content.contains("\"" + subscriberKey + "\"")) {
-                String afterKey = content.split("\"" + subscriberKey + "\"")[1];
-                String block = afterKey.substring(afterKey.indexOf("{") + 1, afterKey.indexOf("}"));
-                String[] pairs = block.split(",");
-                for (String pair : pairs) {
-                    if (pair.contains(":")) {
-                        String[] keyValue = pair.split(":", 2);
-                        String key = keyValue[0].replace("\"", "").trim();
-                        String value = keyValue[1].replace("\"", "").trim();
-                        if (value.equalsIgnoreCase("null")) {
-                            value = null;
-                        }
-                        configMap.put(key, value);
-                    }
-                }
-            }
-        } catch (IOException e) {
-            System.err.println("Error leyendo el archivo físico config.json: " + e.getMessage());
-        }
-        return configMap;
-    }
 
     @Override
     public void onMessage(Message message) {
