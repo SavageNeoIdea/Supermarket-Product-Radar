@@ -1,9 +1,8 @@
-package controller.reader;
+package controller.store.reader;
 
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class PathBuilder {

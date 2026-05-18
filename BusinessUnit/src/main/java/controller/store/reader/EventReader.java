@@ -1,6 +1,4 @@
-package controller.reader;
-
-import model.Product;
+package controller.store.reader;
 
 import java.io.IOException;
 import java.nio.file.Files;
