@@ -12,29 +12,40 @@ import java.util.Map;
 import java.util.UUID;
 
 public class ActiveMQStorer implements Storer, AutoCloseable {
-    private static final String TOPIC_NAME = "events.product";
     private final Gson gson;
-    private final String source;
-    private final Connection connection;
-    private final Session session;
-    private final MessageProducer producer;
+    private final String brokerUrl;
+    private final String topicName;
+    private final String username;
+    private final String password;
+    private Connection connection;
+    private Session session;
+    private MessageProducer producer;
 
-    public ActiveMQStorer(String brokerUrl,
-                         String user,
-                         String password,
-                         String source) {
-        this.source = source;
+    public ActiveMQStorer() {
+        ConfigReader reader = new ConfigReader();
+        Map<String, String> config = reader.loadConfig("publishers", "mercadona");
+        if (config == null) {
+            throw new RuntimeException("ERROR: Could not load configuration for publisher 'mercadona'");
+        }
+        this.brokerUrl = config.get("brokerUrl");
+        this.topicName = config.get("topicName");
+        this.username = config.get("username");
+        this.password = config.get("password");
         this.gson = new Gson();
+        connectToActiveMQ();
+    }
+
+    public void connectToActiveMQ() {
         try {
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
-            this.connection = factory.createConnection(user, password);
-            this.connection.start();
-            this.session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            Topic topic = session.createTopic(TOPIC_NAME);
-            this.producer = session.createProducer(topic);
-            System.out.println("Connected to ActiveMQ broker: " + brokerUrl);
+            connection = factory.createConnection(username, password);
+            connection.start();
+            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Topic topic = session.createTopic(topicName);
+            producer = session.createProducer(topic);
+            System.out.println("Connected to ActiveMQ and publisher ready for topic: " + topicName);
         } catch (JMSException e) {
-            throw new RuntimeException("Failed to initialize ActiveMQ connection", e);
+            throw new RuntimeException("Critical ActiveMQ error", e);
         }
     }
 
@@ -46,7 +57,7 @@ public class ActiveMQStorer implements Storer, AutoCloseable {
                 String jsonEvent = buildEvent(product, batchTs);
                 TextMessage message = session.createTextMessage(jsonEvent);
                 message.setStringProperty("eventType", "product");
-                message.setStringProperty("source", source);
+                message.setStringProperty("source", "mercadona");
                 producer.send(message);
             }
             System.out.println("Published " + products.size() + " product events.");
@@ -72,7 +83,7 @@ public class ActiveMQStorer implements Storer, AutoCloseable {
         Map<String, Object> event = new LinkedHashMap<>();
         event.put("uid", UUID.randomUUID());
         event.put("ts", batchTs.toString());
-        event.put("ss", source);
+        event.put("ss", "mercadona");
         event.put("payload", payload);
         return gson.toJson(event);
     }
@@ -80,9 +91,9 @@ public class ActiveMQStorer implements Storer, AutoCloseable {
     @Override
     public void close() {
         try {
-            producer.close();
-            session.close();
-            connection.close();
+            if (producer != null) producer.close();
+            if (session != null) session.close();
+            if (connection != null) connection.close();
             System.out.println("ActiveMQ connection closed.");
         } catch (JMSException e) {
             throw new RuntimeException("Failed to close ActiveMQ resources", e);
