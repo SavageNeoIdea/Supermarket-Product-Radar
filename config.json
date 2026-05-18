@@ -9,6 +9,7 @@
       "password": "admin"
     },
     "businessUnitSubscriber": {
+      "datamartUrl": "jdbc:sqlite:datamart.db?journal_mode=WAL&busy_timeout=5000",
       "brokerUrl": "tcp://localhost:61616",
       "topicName": "product",
       "clientId": "BusinessUnitSubscriber",

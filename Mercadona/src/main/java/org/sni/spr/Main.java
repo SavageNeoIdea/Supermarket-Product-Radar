@@ -2,7 +2,6 @@ package org.sni.spr;
 
 import org.sni.spr.controller.*;
 import org.sni.spr.store.*;
-
 import java.time.LocalTime;
 
 public class Main {

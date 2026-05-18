@@ -4,7 +4,8 @@ import controller.feeder.Feeder;
 import controller.store.DatamartStore;
 import model.Product;
 import org.apache.activemq.ActiveMQConnectionFactory;
-
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import javax.jms.*;
 import java.util.List;
 import java.util.Map;
@@ -24,15 +25,18 @@ public class ActivemqSubscriptor implements MessageListener, Subscriptor {
     public ActivemqSubscriptor(Feeder dataPreprocessor, DatamartStore datamartStore) {
         this.dataPreprocessor = dataPreprocessor;
         this.datamartStore = datamartStore;
+
         loadModuleConfiguration();
     }
 
     private void loadModuleConfiguration() {
         ConfigReader reader = new ConfigReader();
         Map<String, String> config = reader.loadConfig("subscribers", "businessUnitSubscriber");
+
         if (config == null) {
             throw new RuntimeException("ERROR: Could not load configuration for businessUnitSubscriber");
         }
+
         this.brokerUrl = config.get("brokerUrl");
         this.topicName = config.get("topicName");
         this.clientId = config.get("clientId");
@@ -79,14 +83,29 @@ public class ActivemqSubscriptor implements MessageListener, Subscriptor {
         }
     }
 
+    // SEGMENTACIÓN: Extrae el evento, descubre el 'ss' del JSON y alimenta al preprocesador
     private void processIncomingMessage(TextMessage textMessage) throws Exception {
         String event = textMessage.getText();
-        String source = textMessage.getStringProperty("ss");
-
+        String source = extractSourceFromJson(event);
+        if (source == null) {
+            System.err.println("WARN: Se recibió un evento pero no se pudo determinar el 'ss' en el JSON.");
+            return;
+        }
         Product product = dataPreprocessor.processData(source, event);
-
         if (product != null) {
             datamartStore.storeAllData(List.of(product));
         }
+    }
+
+    private String extractSourceFromJson(String eventString) {
+        try {
+            JsonObject root = JsonParser.parseString(eventString).getAsJsonObject();
+            if (root.has("ss") && !root.get("ss").isJsonNull()) {
+                return root.get("ss").getAsString();
+            }
+        } catch (Exception e) {
+            System.err.println("Error parseando el JSON para extraer 'ss': " + e.getMessage());
+        }
+        return null;
     }
 }
