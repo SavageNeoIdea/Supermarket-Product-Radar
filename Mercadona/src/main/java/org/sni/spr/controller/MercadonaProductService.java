@@ -17,7 +17,14 @@ public class MercadonaProductService implements ProductService {
     @Override
     public List<Product> getProducts(List<String> ids) {
         return ids.stream()
-                .map(this::fetchProduct)
+                .map(id -> {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return fetchProduct(id);
+        })
                 .filter(Objects::nonNull)
                 .toList();
     }
