@@ -179,7 +179,7 @@ Para garantizar la integridad del flujo de datos en tiempo real y evitar la pér
 ### Requisitos Previos
 
 * Tener instalado y en ejecución un Bróker de Mensajería (ej. Apache ActiveMQ / Artemis) escuchando en el puerto configurado (por defecto `tcp://localhost:61616`).
-* Asegurar que el archivo `config.json` esté presente en el directorio de ejecución de cada módulo.
+* Asegurar que el archivo `config.json` esté presente en la raíz de la carpeta principal que contiene todos los módulos del proyecto.
 
 ### Pasos para el Arranque del Sistema
 
