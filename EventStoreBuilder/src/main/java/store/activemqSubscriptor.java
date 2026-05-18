@@ -1,6 +1,5 @@
 package store;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import Controller.ConfigReader;
 import javax.jms.*;
 import java.util.Map;
 
