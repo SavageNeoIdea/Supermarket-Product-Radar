@@ -1,26 +1,38 @@
 package org.sni.spr.hiperdino.controller.store;
 import com.google.gson.Gson;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
+import javax.jms.*;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import javax.jms.*;
-
 public class ActiveMQStore implements Store {
+
     private final Gson gson;
-    private final String user, url, password;
+    private final String brokerUrl;
+    private final String topicName;
+    private final String username;
+    private final String password;
+
     private Connection connection;
     private Session session;
     private Topic topic;
     private MessageProducer producer;
 
+    public ActiveMQStore() {
 
-    public ActiveMQStore(String url, String user, String password) {
-        this.url = url;
-        this.user = user;
-        this.password = password;
+        ConfigReader reader = new ConfigReader();
+        Map<String, String> config = reader.loadConfig("publishers", "hiperdino");
+
+        if (config == null) {
+            throw new RuntimeException("ERROR: Could not load configuration for publisher 'hiperdino'");
+        }
+
+        this.brokerUrl = config.get("brokerUrl");
+        this.topicName = config.get("topicName");
+        this.username = config.get("username");
+        this.password = config.get("password");
         this.gson = new Gson();
     }
 
@@ -31,7 +43,7 @@ public class ActiveMQStore implements Store {
             String jsonEvent = wrapProduct(product);
             producer.send(session.createTextMessage(jsonEvent));
         } catch (JMSException e) {
-            System.err.println("Fallo en el envío JMS: " + e.getMessage());
+            System.err.println("JMS send failure: " + e.getMessage());
             session = null;
         }
     }
@@ -43,15 +55,15 @@ public class ActiveMQStore implements Store {
 
     public void connectToActiveMQ() {
         try {
-            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(url);
-            connection = factory.createConnection(user, password);
+            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
+            connection = factory.createConnection(username, password);
             connection.start();
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            topic = session.createTopic("product");
+            topic = session.createTopic(topicName);
             producer = session.createProducer(topic);
-            System.out.println("Conectado y Productor listo en ActiveMQ");
+            System.out.println("Connected to ActiveMQ and publisher ready for topic: " + topicName);
         } catch (JMSException e) {
-            throw new RuntimeException("Error crítico en ActiveMQ", e);
+            throw new RuntimeException("Critical ActiveMQ error", e);
         }
     }
 
