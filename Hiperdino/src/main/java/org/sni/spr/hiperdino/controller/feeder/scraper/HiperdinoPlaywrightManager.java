@@ -15,8 +15,6 @@ public class HiperdinoPlaywrightManager implements WebScraper {
     private Playwright playwright;
     private Page page;
     private String postalCode;
-    private ProductResponseHandler responseHandler;
-    private final List<Map<String, String>> allProducts = new ArrayList<>();
     private Consumer<List<String>> currentDataConsumer;
 
     public HiperdinoPlaywrightManager(String postalCode) {
@@ -27,7 +25,6 @@ public class HiperdinoPlaywrightManager implements WebScraper {
     public void startScraping(Consumer<List<String>> rawDataConsumer) {
         this.currentDataConsumer = rawDataConsumer;
         initScraperEngine();
-        System.out.println(extractLinks());
         for (String url : extractLinks()) {
             setupWithStreaming(url);
         }
@@ -40,10 +37,10 @@ public class HiperdinoPlaywrightManager implements WebScraper {
         String category = context.get(1);
         String subcategory = context.get(2);
         emitFirstProductPage(category, subcategory);
-        responseHandler = new ProductResponseHandler(page, url, jsonBody -> {
+        ProductResponseHandler localHandler = new ProductResponseHandler(page, subcategory, jsonBody -> {
             currentDataConsumer.accept(List.of(jsonBody, category, subcategory));
         });
-        responseHandler.scrollUntilEnd();
+        localHandler.scrollUntilEnd();
     }
 
     private void emitFirstProductPage(String category, String subcategory) {

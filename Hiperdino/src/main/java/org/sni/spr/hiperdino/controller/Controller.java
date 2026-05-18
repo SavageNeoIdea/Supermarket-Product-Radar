@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Controller {
     private final ProductFeeder productFeeder;
     private final Store store;
-    private final ExecutorService storeExecutor = Executors.newFixedThreadPool(10);
+    private final ExecutorService storeExecutor = Executors.newFixedThreadPool(4);
 
     public Controller(ProductFeeder productFeeder, Store store) {
         this.productFeeder = productFeeder;
