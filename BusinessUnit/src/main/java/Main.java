@@ -1,6 +1,6 @@
 import controller.Controller;
 import controller.feeder.ProductFeeder;
-import controller.reader.EventReader;
+import controller.store.reader.EventReader;
 import controller.store.activemq.ActiveMQSuscription;
 import controller.store.sqlite.SQLiteConnection;
 import controller.store.sqlite.SQLiteQuery;

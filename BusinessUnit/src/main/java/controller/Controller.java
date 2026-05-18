@@ -4,7 +4,7 @@ import controller.store.DatamartStore;
 import controller.store.SearchQuery;
 import controller.store.activemq.Subscriptor;
 import model.Product;
-import controller.reader.DataReader;
+import controller.store.reader.DataReader;
 import controller.feeder.Feeder;
 
 import java.util.List;
