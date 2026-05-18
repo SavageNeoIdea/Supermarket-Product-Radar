@@ -14,17 +14,20 @@ public class ActivemqSubscriptor implements MessageListener, Subscriptor {
     private final Feeder dataPreprocessor;
     private final DatamartStore datamartStore;
 
-    private final String brokerUrl;
-    private final String topicName;
-    private final String clientId;
-    private final String subscriptionName;
-    private final String username;
-    private final String password;
+    private String brokerUrl;
+    private String topicName;
+    private String clientId;
+    private String subscriptionName;
+    private String username;
+    private String password;
 
     public ActivemqSubscriptor(Feeder dataPreprocessor, DatamartStore datamartStore) {
         this.dataPreprocessor = dataPreprocessor;
         this.datamartStore = datamartStore;
+        loadModuleConfiguration();
+    }
 
+    private void loadModuleConfiguration() {
         ConfigReader reader = new ConfigReader();
         Map<String, String> config = reader.loadConfig("subscribers", "businessUnitSubscriber");
         if (config == null) {
@@ -43,12 +46,7 @@ public class ActivemqSubscriptor implements MessageListener, Subscriptor {
         try {
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
             factory.setTrustAllPackages(true);
-            Connection connection;
-            if (username != null && !username.isEmpty() && password != null && !password.isEmpty()) {
-                connection = factory.createConnection(username, password);
-            } else {
-                connection = factory.createConnection();
-            }
+            Connection connection = createJmsConnection(factory);
             connection.setClientID(clientId);
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             Topic topic = session.createTopic(topicName);
@@ -62,20 +60,33 @@ public class ActivemqSubscriptor implements MessageListener, Subscriptor {
         }
     }
 
+    private Connection createJmsConnection(ActiveMQConnectionFactory factory) throws JMSException {
+        if (username != null && !username.isBlank() && password != null && !password.isBlank()) {
+            return factory.createConnection(username, password);
+        }
+        return factory.createConnection();
+    }
+
     @Override
     public void onMessage(Message message) {
         try {
             if (message instanceof TextMessage textMessage) {
-                String event = textMessage.getText();
-                String source = message.getStringProperty("ss");
-                Product product = dataPreprocessor.processData(source, event);
-                if (product != null) {
-                    datamartStore.storeAllData(List.of(product));
-                }
+                processIncomingMessage(textMessage);
             }
         } catch (Exception e) {
-            System.err.println("Unexpected error in onMessage");
+            System.err.println("Unexpected error processing message in ActivemqSubscriptor");
             e.printStackTrace();
+        }
+    }
+
+    private void processIncomingMessage(TextMessage textMessage) throws Exception {
+        String event = textMessage.getText();
+        String source = textMessage.getStringProperty("ss");
+
+        Product product = dataPreprocessor.processData(source, event);
+
+        if (product != null) {
+            datamartStore.storeAllData(List.of(product));
         }
     }
 }

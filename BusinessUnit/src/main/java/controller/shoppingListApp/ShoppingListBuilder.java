@@ -80,13 +80,10 @@ public class ShoppingListBuilder {
 
     public List<Map<String, Product>> buildShopListData() {
         List<Map<String, Product>> resultList = new ArrayList<>();
-
         Map<String, Product> allSourcesMap = ProductUtils.BestProductsForAnySources(productInputMap);
         resultList.add(allSourcesMap);
-
         Map<String, Product> mercadonaMap = filterMapBySource(allSourcesMap, "mercadona");
         resultList.add(mercadonaMap);
-
         Map<String, Product> hiperdinoMap = filterMapBySource(allSourcesMap, "hiperdino");
         resultList.add(hiperdinoMap);
 

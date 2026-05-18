@@ -6,23 +6,17 @@ import model.Product;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class ProductFeeder implements Feeder {
 
     @Override
     public List<Product> processData(Map<String, List<String>> rawJson) {
         List<Product> productList = new ArrayList<>();
-
         if (rawJson == null) return productList;
-
-        Set<String> sources = rawJson.keySet();
-
-        for (String source : sources) {
-            List<String> events = rawJson.get(source);
-
+        for (Map.Entry<String, List<String>> entry : rawJson.entrySet()) {
+            String source = entry.getKey();
+            List<String> events = entry.getValue();
             if (events == null) continue;
-
             for (String event : events) {
                 Product product = processData(source, event);
                 if (product != null) {
@@ -36,33 +30,38 @@ public class ProductFeeder implements Feeder {
     @Override
     public Product processData(String source, String event) {
         if (event == null || event.trim().isEmpty()) return null;
-
         try {
             JsonObject root = JsonParser.parseString(event).getAsJsonObject();
             if (!root.has("payload")) return null;
-
-            String ts = root.has("ts") && !root.get("ts").isJsonNull()
-                    ? root.get("ts").getAsString()
-                    : "";
-
-            JsonObject json = root.getAsJsonObject("payload");
-
-            String name = json.get(source + "Name").getAsString();
-            double price = json.get(source + "Price").getAsDouble();
-            String measure = json.get(source + "Measure").getAsString();
-            int qty = json.get(source + "Qty").getAsInt();
-            int pQty = json.get(source + "PackageQty").getAsInt();
-
-            String eanKey = source + "Ean";
-            String ean = json.has(eanKey) && !json.get(eanKey).isJsonNull()
-                    ? json.get(eanKey).getAsString()
-                    : "";
-            String brand = json.get(source + "Brand").getAsString();
-
-            return new Product(name, price, measure, qty, pQty, ean, brand, source, ts);
+            String ts = extractOptionalRootString(root, "ts");
+            JsonObject payload = root.getAsJsonObject("payload");
+            return mapPayloadToProduct(payload, source, ts);
         } catch (Exception e) {
-            System.err.println("Error en " + source + ": " + e.getMessage());
+            System.err.println("Error procesando evento de " + source + ": " + e.getMessage());
             return null;
         }
+    }
+
+    private Product mapPayloadToProduct(JsonObject payload, String source, String ts) {
+        String name = payload.get(source + "Name").getAsString();
+        double price = payload.get(source + "Price").getAsDouble();
+        String measure = payload.get(source + "Measure").getAsString();
+        int qty = payload.get(source + "Qty").getAsInt();
+        int pQty = payload.get(source + "PackageQty").getAsInt();
+        String brand = payload.get(source + "Brand").getAsString();
+        String ean = extractOptionalPayloadString(payload, source + "Ean");
+        return new Product(name, price, measure, qty, pQty, ean, brand, source, ts);
+    }
+
+    private String extractOptionalRootString(JsonObject root, String memberName) {
+        return root.has(memberName) && !root.get(memberName).isJsonNull()
+                ? root.get(memberName).getAsString()
+                : "";
+    }
+
+    private String extractOptionalPayloadString(JsonObject payload, String memberName) {
+        return payload.has(memberName) && !payload.get(memberName).isJsonNull()
+                ? payload.get(memberName).getAsString()
+                : "";
     }
 }

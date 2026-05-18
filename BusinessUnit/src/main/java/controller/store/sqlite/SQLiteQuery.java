@@ -1,4 +1,5 @@
 package controller.store.sqlite;
+
 import com.google.gson.JsonObject;
 import controller.store.SearchQuery;
 
@@ -12,30 +13,39 @@ import java.util.*;
 public class SQLiteQuery implements SearchQuery {
 
     private final SQLiteConnection sqLiteConnection;
-    private Map<String, List<String>> sourceEventMap;
 
     public SQLiteQuery(SQLiteConnection sqLiteConnection) {
         this.sqLiteConnection = sqLiteConnection;
     }
 
-    public  Map<String, Map<String, List<String>>> searchQuery(String input) {
+    public Map<String, Map<String, List<String>>> searchQuery(String input) {
         Map<String, Map<String, List<String>>> data = new LinkedHashMap<>();
-        sourceEventMap = new HashMap<>();
-        if (haveDataInside(input, data)) { data.put("", sourceEventMap); return data;}
+        Map<String, List<String>> sourceEventMap = new HashMap<>();
+        if (haveDataInside(input, data)) {
+            data.put("", sourceEventMap);
+            return data;
+        }
         String[] tokens = extractTokens(input);
         String sqlQuery = buildQuery(tokens);
+        executeDatabaseQuery(sqlQuery, tokens, sourceEventMap);
+        data.put(input, sourceEventMap);
+        return data;
+    }
 
+    private void executeDatabaseQuery(String sqlQuery, String[] tokens, Map<String, List<String>> sourceEventMap) {
         try (Connection conn = sqLiteConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sqlQuery)) {
-            for (int i = 0; i < tokens.length; i++) {
-                pstmt.setString(i + 1, "%" + tokens[i] + "%");
-            }
-            getSourceEventMap(pstmt);
+            bindQueryParameters(pstmt, tokens);
+            processResultSet(pstmt, sourceEventMap);
         } catch (SQLException e) {
             throw new RuntimeException("Error ejecutando la búsqueda en la base de datos", e);
         }
-        data.put(input, sourceEventMap);
-        return data;
+    }
+
+    private void bindQueryParameters(PreparedStatement pstmt, String[] tokens) throws SQLException {
+        for (int i = 0; i < tokens.length; i++) {
+            pstmt.setString(i + 1, "%" + tokens[i] + "%");
+        }
     }
 
     private boolean haveDataInside(String input, Map<String, Map<String, List<String>>> data) {
@@ -46,26 +56,31 @@ public class SQLiteQuery implements SearchQuery {
         return false;
     }
 
-    private void getSourceEventMap(PreparedStatement pstmt) throws SQLException {
+    private void processResultSet(PreparedStatement pstmt, Map<String, List<String>> sourceEventMap) throws SQLException {
         try (ResultSet rs = pstmt.executeQuery()) {
             while (rs.next()) {
                 String source = rs.getString("source");
-                JsonObject root = new JsonObject();
-                root.addProperty("uid", UUID.randomUUID().toString());
-                root.addProperty("ts", Instant.now().toString());
-                root.addProperty("ss", source);
-                JsonObject payload = new JsonObject();
-                payload.addProperty(source + "Name", rs.getString("name"));
-                payload.addProperty(source + "Price", rs.getDouble("price"));
-                payload.addProperty(source + "Measure", rs.getString("measure"));
-                payload.addProperty(source + "Qty", rs.getInt("quantity"));
-                payload.addProperty(source + "PackageQty", rs.getInt("packageQuantity"));
-                payload.addProperty(source + "Brand", rs.getString("brand"));
-                root.add("payload", payload);
+                String jsonEvent = buildJsonEvent(rs, source);
                 sourceEventMap.computeIfAbsent(source, key -> new ArrayList<>())
-                        .add(root.toString());
+                        .add(jsonEvent);
             }
         }
+    }
+
+    private String buildJsonEvent(ResultSet rs, String source) throws SQLException {
+        JsonObject root = new JsonObject();
+        root.addProperty("uid", UUID.randomUUID().toString());
+        root.addProperty("ts", Instant.now().toString());
+        root.addProperty("ss", source);
+        JsonObject payload = new JsonObject();
+        payload.addProperty(source + "Name", rs.getString("name"));
+        payload.addProperty(source + "Price", rs.getDouble("price"));
+        payload.addProperty(source + "Measure", rs.getString("measure"));
+        payload.addProperty(source + "Qty", rs.getInt("quantity"));
+        payload.addProperty(source + "PackageQty", rs.getInt("packageQuantity"));
+        payload.addProperty(source + "Brand", rs.getString("brand"));
+        root.add("payload", payload);
+        return root.toString();
     }
 
     private String[] extractTokens(String input) {

@@ -9,7 +9,6 @@ public class activemqSubscriptor implements MessageListener, Subscriptor {
     private final String topicName;
     private final String clientId;
     private final String subscriptionName;
-
     private Connection connection;
     private Session session;
     private final EventStore eventStore;
