@@ -1,0 +1,20 @@
+{
+  "subscribers": {
+    "eventStoreSubscriber": {
+      "brokerUrl": "tcp://localhost:61616",
+      "topicName": "event.store.topic",
+      "clientId": "event-store-client",
+      "subscriptionName": "event-store-subscription",
+      "username": "admin",
+      "password": "admin"
+    },
+    "businessUnitSubscriber": {
+      "brokerUrl": "tcp://localhost:61616",
+      "topicName": "product",
+      "clientId": "BusinessUnitSubscriber",
+      "subscriptionName": "realtimeDatamartUpdate",
+      "username": "admin",
+      "password": "admin"
+    }
+  }
+}
