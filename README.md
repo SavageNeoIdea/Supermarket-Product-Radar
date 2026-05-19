@@ -224,27 +224,35 @@ Para evitar errores de compilación por discrepancias de versiones, configura el
 1. **Abrir Project Structure:** Paso 1.1.
 En la barra de menús superior de IntelliJ IDEA, dirígete a `File` (Archivo) y selecciona `Project Structure...` (Estructura del proyecto), o utiliza el atajo de teclado `Ctrl + Alt + Shift + S` (`Cmd + ;` en macOS).
 
-
 2. **Configurar el SDK del Proyecto:** Paso 1.2.
 En el menú lateral izquierdo, haz clic en la sección `Project`. Dentro del apartado **SDK**, selecciona **Microsoft OpenJDK 21**. En caso de no tenerlo instalado, despliega las opciones, selecciona *Download JDK*, elige el proveedor *Microsoft* y descarga la versión 21.
-
 
 3. **Ajustar el Language Level:** Paso 1.3.
 Justo debajo de la selección del SDK, localiza el desplegable **Project language level** y asegúrate de marcar la opción **21 - Record patterns, pattern matching for switch**. Haz clic en `Apply` y luego en `OK`.
 
-
 #### Paso 2: Vinculación de Módulos y Descarga Global de Dependencias
 
-Para no tener que ir uno a uno haciendo clic derecho en cada `pom.xml`, puedes importar y descargar absolutamente todas las dependencias del ecosistema a la vez.
-Abre una terminal integrada en IntelliJ IDEA (asegúrate de estar en la **raíz del proyecto principal**) y ejecuta el siguiente comando de Maven:
+Como los módulos están distribuidos en subcarpetas independientes y no existe un archivo `pom.xml` unificado en la raíz, puedes forzar a Maven a que recorra recursivamente todas las subcarpetas del directorio principal para descargar las librerías y compilar todo el ecosistema de una sola pasada.
 
-```bash
-mvn clean install -DskipTests
+Para abrir la **Terminal de IntelliJ**, utiliza el atajo de teclado `Alt + F12` (`⌥ + F12` en macOS) o haz clic en la pestaña **Terminal** situada en la barra de herramientas inferior del IDE. Al abrirse, ya estará situada automáticamente en la raíz de tu proyecto principal (donde se encuentra tu archivo `config.json`).
+
+Copia y pega en la terminal el comando correspondiente al sistema operativo en el que esté corriendo tu IntelliJ:
+
+* **Si estás en Windows (PowerShell por defecto en IntelliJ):**
+```powershell
+Get-ChildItem -Recurse -Filter pom.xml | ForEach-Object { mvn -f $_.FullName clean install -DskipTests }
+
 ```
 
-> 💡 **¿Qué hace este comando?** Borra residuos antiguos (`clean`), descarga todas las librerías necesarias para cada uno de los 4 módulos de golpe (`install`), compila el código bajo el JDK 21 y salta las pruebas de entorno (`-DskipTests`) para que el proceso sea inmediato. Tras esto, IntelliJ sincronizará automáticamente la jerarquía de carpetas.
-> *Si por algún motivo un módulo específico no se iluminara en verde como proyecto Java, puedes ir de forma manual a su `pom.xml`, hacer clic derecho y seleccionar **Add as Maven Project**.*
+* **Si estás en Linux / macOS (Bash / Zsh):**
+```bash
+find . -name "pom.xml" -exec mvn -f {} clean install -DskipTests \;
 
+```
+
+> 💡 **¿Qué hace este comando?** Escanea automáticamente todo el árbol de directorios, localiza cada archivo `pom.xml` individual (de cada supermercado, el almacén y la unidad de negocio) y le aplica el ciclo de vida de Maven (`clean install`) de manera secuencial utilizando el parámetro `-f` para forzar el apuntado.
+> Esto limpia residuos antiguos, compila bajo el JDK 21, salta las pruebas de entorno (`-DskipTests`) e instala absolutamente todas las dependencias pesadas (Playwright, controladores SQLite, librerías del modelo de IA, etc.) de un solo golpe.
+> *Tras finalizar el proceso, IntelliJ IDEA sincronizará automáticamente la jerarquía de carpetas. Si por algún motivo un módulo específico no se iluminara en verde como proyecto Java activo, puedes ir de forma manual a su `pom.xml`, hacer clic derecho y seleccionar **Add as Maven Project**.*
 ---
 
 ### Modo de Ejecución Inmediata (Omitir el Programador / Schedulers)
@@ -257,7 +265,6 @@ Vamos, borra la linea 19 y escribe eso:
 controller.init();
 ```
 
-
 * **Módulo Mercadona:** Realiza el mismo procedimiento en su respectivo `Main.java` (línea 19), reemplazando el código del planificador por la ejecución directa del flujo pasando la URL del sitemap:
 Vamos, borra la linea 19 y escribe eso:
 ```java
@@ -265,7 +272,7 @@ controller.run(sitemapUrl);
 ```
 ---
 
-### Pasos para el Arranque Secuencial del Sistema
+### Paso 3: Pasos para el Arranque Secuencial del Sistema
 
 Una vez compilado todo limpiamente, ejecuta las clases `Main.java` de los componentes en este orden exacto para permitir la correcta sincronización de las capas de datos distribuidas:
 
