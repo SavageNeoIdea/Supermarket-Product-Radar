@@ -192,31 +192,17 @@ Para garantizar la estabilidad del sistema y evitar fallos de ejecución, es fun
 * **Planificación Horaria del Scraping:** Las propiedades `ScheduleTimeHour` y `ScheduleTimeMinutes` determinan la hora exacta en la que se disparará el proceso automático de extracción de datos para cada supermercado de forma diaria. El planificador toma como referencia la **hora local** del dispositivo o servidor donde se esté ejecutando el módulo.
 ---
 
-## Requisitos Previos y Configuración del Entorno
+Aquí tienes el bloque completo y unificado para la sección **6. Instrucciones de Compilación y Ejecución**.
 
-* **Bróker de Mensajería:** Tener instalado y en ejecución un bróker de mensajería (como Apache ActiveMQ o Artemis) escuchando en el puerto configurado (por defecto, `tcp://localhost:61616`).
-* **Fichero de Configuración:** Asegurar que el archivo `config.json` esté correctamente ubicado en la raíz del directorio principal que engloba todos los módulos del proyecto.
-* **Entorno de Desarrollo (IDE Recomendado):** Se requiere el uso de **IntelliJ IDEA**. El proyecto delega en este IDE la gestión automática del ciclo de vida y las dependencias de herramientas del sistema (como la instalación interna y ejecución transparente de Chromium para el módulo de Web Scraping automatizado por Playwright), garantizando un despliegue sin configuraciones adicionales en el sistema operativo.
-* **Versión de Java y SDK:** El ecosistema está desarrollado bajo **Microsoft OpenJDK 21** y requiere un nivel de lenguaje (**Language Level**) fijado estrictamente en **21** para soportar las características modernas de concurrencia y estructuras de datos utilizadas.
+Respecto a tu duda sobre Maven: **sí, es una idea fantástica añadir un comando**. En proyectos multimódulo de Java, en lugar de compilar o descargar dependencias módulo por módulo, puedes ejecutar un único comando desde la raíz del proyecto. Esto le descarga la vida al usuario y asegura que todas las dependencias (incluido Playwright, las librerías de IA y los drivers de SQLite) se descarguen de golpe y de forma limpia en todo el ecosistema.
 
-#### Ajuste de la Estructura del Proyecto en IntelliJ IDEA
+He unificado todos los puntos (requisitos, configuración en IntelliJ, trucos del scheduler y el orden de encendido) en una sola guía fluida y súper profesional:
 
-Para evitar errores de compilación por discrepancias de versiones, debes configurar el SDK global del proyecto siguiendo estos pasos tras abrir el entorno:
+---
 
-1. **Abrir Project Structure:** Paso 1.
-En la barra de menús superior de IntelliJ IDEA, dirígete a `File` (Archivo) y selecciona `Project Structure...` (Estructura del proyecto), o utiliza el atajo de teclado `Ctrl + Alt + Shift + S` (`Cmd + ;` en macOS).
+## 6. Instrucciones de Compilación y Ejecución
 
-
-2. **Configurar el SDK del Proyecto:** Paso 2.
-En el menú lateral izquierdo, haz clic en la sección `Project`. Dentro del apartado **SDK**, selecciona **Microsoft OpenJDK 21**. En caso de no tenerlo instalado, despliega las opciones, selecciona *Download JDK*, elige el proveedor *Microsoft* y descarga la versión 21.
-
-
-3. **Ajustar el Language Level:** Paso 3.
-Justo debajo de la selección del SDK, localiza el desplegable **Project language level** y asegúrate de marcar la opción **21 - Record patterns, pattern matching for switch**.
-
-
-4. **Aplicar y Sincronizar:** Paso 4.
-Haz clic en el botón `Apply` y luego en `OK` en la esquina inferior derecha. Si el IDE lo solicita, permite que se realice la indexación y recarga de los módulos de Maven para heredar la nueva configuración del compilador.
+Para garantizar la integridad de la arquitectura Lambda, evitar la pérdida de mensajes y asegurar que el Motor de IA y los Scrapers arranquen sin conflictos de dependencias, **sigue estrictamente el orden de configuración y encendido detallado a continuación**:
 
 ### Requisitos Previos y Configuración del Entorno
 
@@ -225,14 +211,78 @@ Haz clic en el botón `Apply` y luego en `OK` en la esquina inferior derecha. Si
 * **Entorno de Desarrollo (IDE Recomendado):** Se requiere el uso de **IntelliJ IDEA**. El proyecto delega en este IDE la gestión automática del ciclo de vida y las dependencias de herramientas del sistema (como la instalación interna y ejecución transparente de Chromium para el módulo de Web Scraping automatizado por Playwright), garantizando un despliegue sin configuraciones adicionales en el sistema operativo.
 * **Versión de Java y SDK:** El ecosistema está desarrollado bajo **Microsoft OpenJDK 21** y requiere un nivel de lenguaje (**Language Level**) fijado estrictamente en **21** para soportar las características modernas de concurrencia y estructuras de datos utilizadas.
 
-### Pasos para el Arranque del Sistema
+---
 
-1. **Levantar el Bróker:** Asegúrate de que ActiveMQ esté operativo.
-2. **Levantar el Event Store (`EventStoreBuilder`):** Ejecuta `Main.java` en este módulo. Comenzará a escuchar y persistir de manera inmediata cualquier evento entrante para salvaguardar el histórico.
-3. **Levantar la Unidad de Negocio (`Business Unit`):** Ejecuta `Main.java` en el módulo `BusinessUnit`. Se conectará a la *Serving Layer* SQLite, inicializará el pool de hilos distribuidos para ejecutar el **Replay de la Capa Batch** traduciendo los textos a vectores densos, y finalmente mantendrá abierta la **Capa Speed** reactiva.
-4. **Iniciar Scrapers (La fuente de datos):** Ejecuta los archivos `Main.java` de los módulos `Hiperdino` y `Mercadona`. Estos iniciarán sus respectivos *Schedulers* internos basándose en las propiedades de planificación configuradas.
+### Configuración del Proyecto en IntelliJ IDEA
+
+Al abrir el proyecto por primera vez, realiza estos dos pasos para que el entorno entienda la disposición de los módulos y use el compilador correcto:
+
+#### Paso 1: Configurar el JDK y Language Level 21
+
+Para evitar errores de compilación por discrepancias de versiones, configura el SDK global del proyecto:
+
+1. **Abrir Project Structure:** Paso 1.1.
+En la barra de menús superior de IntelliJ IDEA, dirígete a `File` (Archivo) y selecciona `Project Structure...` (Estructura del proyecto), o utiliza el atajo de teclado `Ctrl + Alt + Shift + S` (`Cmd + ;` en macOS).
+
+
+2. **Configurar el SDK del Proyecto:** Paso 1.2.
+En el menú lateral izquierdo, haz clic en la sección `Project`. Dentro del apartado **SDK**, selecciona **Microsoft OpenJDK 21**. En caso de no tenerlo instalado, despliega las opciones, selecciona *Download JDK*, elige el proveedor *Microsoft* y descarga la versión 21.
+
+
+3. **Ajustar el Language Level:** Paso 1.3.
+Justo debajo de la selección del SDK, localiza el desplegable **Project language level** y asegúrate de marcar la opción **21 - Record patterns, pattern matching for switch**. Haz clic en `Apply` y luego en `OK`.
+
+
+#### Paso 2: Vinculación de Módulos y Descarga Global de Dependencias
+
+Para no tener que ir uno a uno haciendo clic derecho en cada `pom.xml`, puedes importar y descargar absolutamente todas las dependencias del ecosistema a la vez.
+Abre una terminal integrada en IntelliJ IDEA (asegúrate de estar en la **raíz del proyecto principal**) y ejecuta el siguiente comando de Maven:
+
+```bash
+mvn clean install -DskipTests
+```
+
+> 💡 **¿Qué hace este comando?** Borra residuos antiguos (`clean`), descarga todas las librerías necesarias para cada uno de los 4 módulos de golpe (`install`), compila el código bajo el JDK 21 y salta las pruebas de entorno (`-DskipTests`) para que el proceso sea inmediato. Tras esto, IntelliJ sincronizará automáticamente la jerarquía de carpetas.
+> *Si por algún motivo un módulo específico no se iluminara en verde como proyecto Java, puedes ir de forma manual a su `pom.xml`, hacer clic derecho y seleccionar **Add as Maven Project**.*
 
 ---
+
+### Modo de Ejecución Inmediata (Omitir el Programador / Schedulers)
+
+Por defecto, los scrapers esperan a la hora configurada en el `config.json`. Si deseas **forzar una ejecución inmediata** para probar el sistema sin esperar a la hora programada, realiza la siguiente modificación en los puntos de entrada:
+
+* **Módulo Hiperdino:** Dirígete al archivo `Main.java`, localiza la línea 19, sustituye la lógica del *scheduler* posterior a la instancia del controlador e invoca directamente al método de inicialización:
+Vamos, borra la linea 19 y escribe eso:
+```java
+controller.init();
+```
+
+
+* **Módulo Mercadona:** Realiza el mismo procedimiento en su respectivo `Main.java` (línea 19), reemplazando el código del planificador por la ejecución directa del flujo pasando la URL del sitemap:
+Vamos, borra la linea 19 y escribe eso:
+```java
+controller.run(sitemapUrl);
+```
+---
+
+### Pasos para el Arranque Secuencial del Sistema
+
+Una vez compilado todo limpiamente, ejecuta las clases `Main.java` de los componentes en este orden exacto para permitir la correcta sincronización de las capas de datos distribuidas:
+
+1. **Levantar el Bróker de Mensajería:** Fase de Infraestructura.
+Asegúrate de que la instancia de tu bróker (ActiveMQ/Artemis) esté operativa y aceptando conexiones de red en el puerto configurado (`61616`).
+
+
+2. **Iniciar el Event Store (EventStoreBuilder):** Fase de Almacenamiento.
+Ejecuta la clase `Main.java` dentro del módulo `EventStoreBuilder`. Este componente se mantendrá en escucha persistente y comenzará a registrar de forma inmutable en el disco cualquier flujo de datos entrante.
+
+
+3. **Desplegar la Unidad de Negocio (Business Unit):** Fase de Inteligencia.
+Ejecuta la clase `Main.java` del módulo `BusinessUnit`. Al arrancar, el sistema se conectará a la base de datos local SQLite, activará el pool de hilos concurrente para procesar el **Replay de la Capa Batch** (traduciendo los datos históricos del paso anterior a vectores de IA) y, al finalizar, dejará abierta la escucha en la **Capa Speed** para capturar actualizaciones en tiempo real.
+
+
+4. **Activar los Scrapers de Origen:** Fase de Alimentación.
+Ejecuta las clases `Main.java` de los módulos `Hiperdino` y `Mercadona`. Estos activarán sus tareas programadas basadas en el archivo de configuración (o se ejecutarán de inmediato si aplicaste el cambio opcional en las líneas 19) para comenzar a nutrir de datos al radar.
 
 ## 7. Ejemplos de Uso e Interacción
 
