@@ -31,7 +31,7 @@ El sistema permite procesar una lista de la compra en formato de texto libre y g
 
 ---
 
-## 2. Justificación Técnica: Arquitectura Lambda, Event Sourcing y CQRS
+## 2. Justificación Técnico: Arquitectura Lambda, Event Sourcing y CQRS
 
 El proyecto implementa de manera estricta los patrones de **Event Sourcing**, **CQRS** (*Command Query Responsibility Segregation*) y se consolida sobre una **Arquitectura Lambda** para resolver eficientemente la consistencia y la disponibilidad del modelo de lectura:
 
@@ -69,6 +69,26 @@ El flujo de información se distribuye a través de tópicos mediante el bróker
        + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
 
 ```
+
+### Arquitectura de la Aplicación (Módulos Internos)
+
+```
++---------------------------------------------------------------------------------+
+|                                   config.json                                   |
+| (Centraliza variables de brokers, bases de datos, tiempos de scraping y topics)  |
++---------------------------------------------------------------------------------+
+                                       |
+       +-------------------------------+-------------------------------+
+       |                               |                               |
+       v                               v                               v
+[ Módulos Scrapers ]         [ EventStoreBuilder ]             [ Business Unit ]
+ - Planificación Horaria      - Subscriber dedicado             - Replay Engine (Batch)
+ - Algoritmo Extracción       - Persistencia Inmutable          - Real-Time Sub (Speed)
+ - Publisher ("product")      - Registro cronológico            - Datamart SQLite (Serving)
+
+```
+
+---
 
 ## 4. Principios y Patrones de Diseño Aplicados
 
@@ -165,22 +185,23 @@ Al iniciar el módulo **Business Unit**, se desplegará la interfaz interactiva 
 
 ### Flujo en la Consola de Comandos
 
+Al arrancar la aplicación, verás el menú principal interactivo generado por la interfaz CLI:
+
 ```text
 Bienvenido a la lista de compra automatica de Hiperdino!: elige una opción:
 1. Crear lista de la compra
-2. Consultar una lista
-3. Observar la lista creada actual
-4. Salir del programa: 
+2. Observar la lista creada
+3. Salir del programa:
 Responde seleccionando uno de los números del teclado: 
 
 ```
 
-1. Introduce `1` para iniciar el asistente de entrada de datos (`Creando lista...`).
-2. Una vez rellenada tu lista, introduce `3` (`Cargando tu lista actual...`) para invocar al motor analítico y procesar el reporte comparativo.
+1. Introduce `1` para iniciar el asistente de entrada de datos (`Creando lista...`). El sistema te pedirá los artículos línea por línea hasta que escribas `fin` o dejes una línea vacía.
+2. Introduce `2` (`Cargando tu lista actual...`) para invocar de inmediato al motor analítico. Este cruzará los datos del Datamart optimizado y generará el reporte de ahorro comparativo.
 
 #### Ejemplo Real de Salida del Reporte Analítico (`buildShopList`)
 
-El sistema evaluará los datos cruzados de ambos supermercados y arrojará el siguiente formato de salida estructurado:
+El sistema evaluará los datos consolidados en la base de datos y arrojará el siguiente formato de salida estructurado:
 
 ```text
 ====================================================================
