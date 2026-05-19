@@ -65,18 +65,18 @@ public class ActiveMQStorer implements Storer, AutoCloseable {
 
     private String buildEvent(Product product, Instant ts) {
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("id", product.getId());
-        payload.put("ean", product.getEan());
-        payload.put("brand", product.getBrand());
-        payload.put("category", product.getCategory());
-        payload.put("subcategory", product.getSubcategory());
-        payload.put("name", product.getDisplayName());
-        payload.put("qty", product.getUnitSize());
-        payload.put("packageQty", product.getTotalUnits());
-        payload.put("measure", product.getUnitType());
-        payload.put("price", product.getUnitPrice());
-        payload.put("gluten", product.getGluten());
-        payload.put("urlImage", product.getThumbnail());
+        payload.put("mercadonaId", product.getId());
+        payload.put("mercadonaEan", product.getEan());
+        payload.put("mercadonaBrand", product.getBrand());
+        payload.put("mercadonaCategory", product.getCategory());
+        payload.put("mercadonaSubcategory", product.getSubcategory());
+        payload.put("mercadonaName", product.getDisplayName());
+        payload.put("mercadonaQty", product.getUnitSize());
+        payload.put("mercadonaPackageQty", product.getTotalUnits());
+        payload.put("mercadonaMeasure", product.getUnitType());
+        payload.put("mercadonaPrice", product.getUnitPrice());
+        payload.put("mercadonaGluten", product.getGluten());
+        payload.put("mercadonaUrlImage", product.getThumbnail());
         Map<String, Object> event = new LinkedHashMap<>();
         event.put("uid", UUID.randomUUID());
         event.put("ts", ts.toString());
