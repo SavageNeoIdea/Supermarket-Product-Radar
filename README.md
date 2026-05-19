@@ -2,9 +2,9 @@
 
 ### Desarrollado por **SavageNeoIdea**
 
-Bienvenido a **Supermarket Product Radar**, una solución de software empresarial impulsada enteramente por eventos (**EDA - Event-Driven Architecture**) para la monitorización, trazabilidad histórica y optimización del presupuesto de la cesta de la compra en tiempo real.
+Bienvenido a **Supermarket Product Radar**, una solución de software empresarial impulsada enteramente por eventos (**EDA - Event-Driven Architecture**) bajo una **Arquitectura Lambda** para la monitorización, trazabilidad histórica y optimización en tiempo real del presupuesto de la cesta de la compra.
 
-Este sistema automatiza la recopilación de productos de las cadenas Mercadona e Hiperdino, procesa la información mediante un bróker de mensajería, almacena el histórico en un *Event Store* inmutable y consolida los datos en una unidad de negocio (*Business Unit*) capaz de calcular de forma inteligente la combinación de compra óptima, exponiendo el denominado **"Impuesto de la pereza"**.
+Este sistema automatiza la recopilación de productos de las cadenas Mercadona e Hiperdino, procesa la información mediante un bróker de mensajería, almacena el histórico en un *Event Store* inmutable y consolida los datos en una unidad de negocio (*Business Unit*). Al inicializarse, reconstruye el estado completo del mercado y lo actualiza continuamente de forma reactiva para calcular de forma inteligente la combinación de compra óptima, exponiendo el denominado **"Impuesto de la pereza"**.
 
 ---
 
@@ -14,10 +14,10 @@ Este sistema automatiza la recopilación de productos de las cadenas Mercadona e
 
 **Supermarket Product Radar** es un ecosistema multimódulo distribuido que elimina la dependencia directa de APIs HTTP externas en caliente, apoyándose en su lugar en una red de publicación/suscripción de eventos. El sistema está compuesto por 4 módulos principales:
 
-1. **Scraper Mercadona:** Módulo con planificador integrado (*Scheduler*) encargado de extraer productos de la plataforma de Mercadona y publicar eventos de actualización de precios.
-2. **Scraper Hiperdino:** Módulo homólogo que extrae productos de Hiperdino mediante técnicas de web scraping distribuidas (Playwright) y publica sus respectivos eventos utilizando la localización regional configurada.
+1. **Scraper Mercadona:** Módulo con planificador integrado (*Scheduler*) configurado por horas específicas para extraer productos de la plataforma de Mercadona y publicar eventos de actualización de precios.
+2. **Scraper Hiperdino:** Módulo homólogo que extrae productos de Hiperdino mediante técnicas de web scraping distribuidas (Playwright), publicando sus eventos según la localización regional y la hora programada.
 3. **EventStoreBuilder:** Componente encargado de escuchar de forma persistentemente los eventos de productos y almacenarlos cronológicamente en un almacén de eventos inmutable (*Event Store*).
-4. **Business Unit:** El núcleo de inteligencia de negocio. Al arrancar, reconstruye su estado leyendo el histórico completo del *Event Store* para inicializar su base de datos local de consultas (Datamart). Posteriormente, procesa eventos en tiempo real para mantener el catálogo actualizado y expone un motor interactivo de optimización de cestas.
+4. **Business Unit:** El núcleo de inteligencia de negocio. Implementa una **Arquitectura Lambda** para la gestión de datos: al arrancar, reconstruye su estado leyendo el histórico completo para inicializar su base de datos local (Datamart) y, posteriormente, procesa eventos en tiempo real para mantener el catálogo fresco, exponiendo un motor interactivo de optimización de cestas.
 
 ### Propuesta de Valor: El "Impuesto de la Pereza" (*Laziness Tax*)
 
@@ -31,58 +31,44 @@ El sistema permite procesar una lista de la compra en formato de texto libre y g
 
 ---
 
-## 2. Justificación Técnica y Estructura del Datamart
+## 2. Justificación Técnica: Arquitectura Lambda, Event Sourcing y CQRS
 
-El proyecto implementa de manera estricta los patrones **Event Sourcing** y **CQRS** (*Command Query Responsibility Segregation*):
+El proyecto implementa de manera estricta los patrones de **Event Sourcing**, **CQRS** (*Command Query Responsibility Segregation*) y se consolida sobre una **Arquitectura Lambda** para resolver eficientemente la consistencia y la disponibilidad del modelo de lectura:
 
-* **Event Store (Write Model):** Controlado por el módulo `EventStoreBuilder`. Almacena secuencialmente en un registro inmutable (*Append-Only*) cada fluctuación, inserción o cambio de precio de un producto. Esto garantiza auditoría completa y trazabilidad histórica sin pérdida de datos.
-* **Read Model / Datamart (Business Unit):** La *Business Unit* utiliza **SQLite** (parametrizado mediante su cadena de conexión JDBC en el archivo de configuración) como una base de datos local, ligera y de alto rendimiento para el Datamart de consulta.
-* **Proceso de Replay (Warm-up al inicio):** Al arrancar la aplicación, el módulo lee cronológicamente todos los eventos históricos desde el almacenamiento persistente del Event Store y realiza una proyección sobre el fichero SQLite, reconstruyendo el catálogo al último estado conocido.
-* **Sincronización en Tiempo Real:** Una vez activa la aplicación, cualquier evento nuevo proveniente del bróker actualiza directamente el archivo SQLite de forma reactiva, garantizando búsquedas instantáneas sobre datos frescos sin penalizar ni saturar el *Event Store*.
+### 1. Capa de Lote / Reconstrucción (*Batch Layer*)
+
+Representada por el proceso de **Replay (Warm-up al inicio)** en la `Business Unit`. Debido a que el *Write Model* está controlado por el módulo `EventStoreBuilder` (que almacena secuencialmente en un registro inmutable *Append-Only* cada fluctuación de precio), la *Business Unit* es capaz de sincronizarse desde cero. Al arrancar, lee cronológicamente todos los eventos históricos del *Event Store* y proyecta el estado actual completo sobre el fichero SQLite, garantizando una reconstrucción perfecta y libre de corrupción de datos.
+
+### 2. Capa Rápida (*Speed Layer*)
+
+Una vez que la aplicación ha procesado el histórico y se encuentra activa, la *Speed Layer* entra en juego a través de `businessUnitSubscriber`. Cualquier evento nuevo o delta de precio proveniente del bróker de mensajería es consumido de forma reactiva en tiempo real. Esto permite actualizar directamente las entradas del Datamart para reflejar los cambios más recientes de los mismos productos sin necesidad de volver a computar todo el lote histórico.
+
+### 3. Capa de Servicio (*Serving Layer*)
+
+La base de datos local **SQLite** (parametrizada mediante su cadena de conexión JDBC con soporte WAL) actúa como el **Datamart de consulta**. Al estar completamente desacoplada del almacenamiento de escritura principal, ofrece lecturas de bajísima latencia para alimentar instantáneamente al motor de optimización de listas de la compra.
 
 ---
 
 ## 3. Arquitectura del Sistema
 
-### Arquitectura de Mensajería (Topología de Eventos)
+### Arquitectura de Mensajería y Flujo Lambda
 
-El flujo de información se distribuye a través de tópicos mediante el bróker de mensajería parametrizado en el archivo `config.json`:
+El flujo de información se distribuye a través de tópicos mediante el bróker de mensajería parametrizado en el archivo `config.json`. Aquí se aprecia cómo coexisten el flujo en tiempo real (Speed) y el de reconstrucción (Batch):
 
 ```
 [ Scraper Mercadona ] --------(Publica en: "product")--------> [ Bróker Mensajería ]
 [ Scraper Hiperdino ] --------(Publica en: "product")--------> [   tcp://61616    ]
                                                                       |
        +--------------------------------------------------------------+
-       | (Suscripción en tiempo real)                                 | (Suscripción Histórica)
+       | (SPEED LAYER: Suscripción en tiempo real)                    | (BATCH LAYER: Almacén Histórico)
        v                                                              v
 [ Business Unit ]                                             [ EventStoreBuilder ]
  (Topic: "product")                                            (Topic: "product")
        ^
-       | [Lectura inicial del histórico / Replay de eventos en disco]
+       | [BATCH LAYER: Replay inicial del histórico desde el Event Store]
        + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
 
 ```
-
-### Arquitectura de la Aplicación (Módulos Internos)
-
-```
-+---------------------------------------------------------------------------------+
-|                                   config.json                                   |
-| (Centraliza credenciales, brokerUrl, datamartUrl, postalCode y TOPICS de pub/sub)|
-+---------------------------------------------------------------------------------+
-                                       |
-       +-------------------------------+-------------------------------+
-       |                               |                               |
-       v                               v                               v
-[ Módulos Scrapers ]         [ EventStoreBuilder ]             [ Business Unit ]
- - Scheduler interno          - Subscriber dedicado             - Replay Engine (Inicio)
- - Algoritmo Extracción       - Persistencia Inmutable          - Real-Time Subscriber
- - Publisher ("product")      - Registro cronológico            - Motor de búsqueda texto
-                                                                - Algoritmo de Cestas
-
-```
-
----
 
 ## 4. Principios y Patrones de Diseño Aplicados
 
@@ -91,15 +77,14 @@ Para garantizar un ecosistema mantenible, escalable y robusto, el desarrollo se 
 * **Patrón Publish-Subscriber (Pub/Sub):** Desacoplamiento total entre los productores de datos (scrapers) y los consumidores finales.
 * **Event Sourcing:** Salvaguarda el ciclo de vida del producto como una serie de eventos mutativos, impidiendo la sobrescritura directa de datos de precios.
 * **Patrón Strategy (en Scrapers):** Abstrae las diferentes estructuras de extracción (APIs JSON internas en Mercadona frente a la interceptación de peticiones HTTP mediante Playwright en Hiperdino) bajo un comportamiento común de aprovisionamiento de datos.
-* **Principio de Responsabilidad Única (SRP):** Hemos prestado bastante atención a este principio en todo el código.
+* **Principio de Responsabilidad Única (SRP):** Alta cohesión en los componentes encargados de la ingesta, almacenamiento y proyección analítica.
 * **Inyección de Dependencias y Desacoplamiento:** Uso sistemático de **interfaces** en los puntos de integración y almacenamiento (`Store`, `WebScraper`, etc.), facilitando la sustitución de componentes (por ejemplo, cambiar el bróker o la base de datos) y la implementación de pruebas unitarias.
-* **Clean Code & Naming Semántico:** Cuidado minucioso en la nomenclatura de clases, variables y métodos para que el código actúe como documentación viva del dominio.
 
 ---
 
 ## 5. Configuración del Sistema (`config.json`)
 
-Toda la infraestructura de comunicación, almacenamiento local de consultas y regionalización de scrapers se parametriza mediante un archivo centralizado. Asegúrate de ubicarlo en la raíz de los módulos correspondientes:
+Toda la infraestructura de comunicación, almacenamiento local de consultas, regionalización y planificación horaria de los scrapers se parametriza mediante un archivo centralizado ubicado en la raíz del proyecto:
 
 ```json
 {
@@ -128,28 +113,35 @@ Toda la infraestructura de comunicación, almacenamiento local de consultas y re
       "topicName": "product",
       "username": "admin",
       "password": "admin",
-      "postalCode": "35010"
+      "postalCode": "35010",
+      "ScheduleTimeHour": "11",
+      "ScheduleTimeMinutes": "30"
     },
     "mercadona": {
       "brokerUrl": "tcp://localhost:61616",
       "topicName": "product",
       "username": "admin",
-      "password": "admin"
+      "password": "admin",
+      "ScheduleTimeHour": "11",
+      "ScheduleTimeMinutes": "30"
     }
   }
 }
 
 ```
 
-> 📌 **Notas de Configuración:**
-> * **Datamart local:** Definido en `"datamartUrl"`. Configura la ruta del archivo SQLite e incluye optimizaciones de rendimiento por defecto (`journal_mode=WAL`).
-> * **Localización Regional:** Hiperdino regionaliza sus precios. El código postal de consulta se configura dinámicamente mediante la propiedad `"postalCode"` sin necesidad de alterar el código fuente de la aplicación.
+> 📌 **Notas de Configuración Clave:**
+> * **Datamart con SQLite:** Definido en `"datamartUrl"`. Actúa como nuestra *Serving Layer* e incluye optimizaciones críticas de concurrencia y velocidad como el modo WAL (`journal_mode=WAL`) y tiempos de espera (`busy_timeout=5000`).
+> * **Planificación del Scraping (Scheduler):** Los campos `"ScheduleTimeHour"` y `"ScheduleTimeMinutes"` determinan de forma exacta a qué hora del día se disparará el proceso automático de extracción de datos para cada supermercado, evitando ejecuciones redundantes y permitiendo una sincronización controlada.
+> * **Localización Regional:** Hiperdino regionaliza sus precios. El código postal de consulta se configura dinámicamente mediante la propiedad `"postalCode"`.
+> 
+> 
 
 ---
 
 ## 6. Instrucciones de Compilación y Ejecución
 
-Para garantizar la integridad del flujo de datos en tiempo real y evitar la pérdida de mensajes durante el proceso de sincronización inicial, **se debe seguir estrictamente el siguiente orden de encendido**:
+Para garantizar la integridad de la arquitectura Lambda y evitar pérdidas de mensajes durante la sincronización, **se debe seguir estrictamente el siguiente orden de encendido**:
 
 ### Requisitos Previos
 
@@ -159,21 +151,19 @@ Para garantizar la integridad del flujo de datos en tiempo real y evitar la pér
 ### Pasos para el Arranque del Sistema
 
 1. **Levantar el Bróker:** Asegúrate de que ActiveMQ esté operativo.
-2. **Levantar el Event Store (`EventStoreBuilder`):** Ejecuta `Main.java` en el módulo `EventStoreBuilder`. Comenzará a escuchar y persistir de manera inmediata cualquier evento entrante.
-3. **Levantar el Read Model (`Business Unit`):** Ejecuta `Main.java` en el módulo `BusinessUnit`. Se conectará al Datamart SQLite indicado en el `config.json` (creándolo si no existe), ejecutará el Replay de los eventos históricos desde el almacén y se mantendrá a la escucha de actualizaciones en tiempo real.
-4. **Iniciar Scrapers (La fuente de datos):** Ejecuta los archivos `Main.java` de los módulos `Hiperdino` y `Mercadona` para comenzar el volcado periódico de productos. El scraper de Hiperdino adoptará automáticamente el código postal provisto en la configuración.
+2. **Levantar el Event Store (`EventStoreBuilder`):** Ejecuta `Main.java` en este módulo. Comenzará a escuchar y persistir de manera inmediata cualquier evento entrante para salvaguardar el histórico.
+3. **Levantar la Unidad de Negocio (`Business Unit`):** Ejecuta `Main.java` en el módulo `BusinessUnit`. Se conectará a la *Serving Layer* SQLite (creándola si no existe), ejecutará de inmediato el **Replay de la Capa Batch** para reconstruir el estado actual, y finalmente dejará abierta la **Capa Speed** para asimilar variaciones en tiempo real.
+4. **Iniciar Scrapers (La fuente de datos):** Ejecuta los archivos `Main.java` de los módulos `Hiperdino` y `Mercadona`. Estos iniciarán sus respectivos *Schedulers* internos basándose en las propiedades `ScheduleTimeHour` y `ScheduleTimeMinutes` provistas en el `config.json`.
 
 ---
 
 ## 7. Ejemplos de Uso e Interacción
 
-Al iniciar el módulo **Business Unit**, se desplegará la interfaz interactiva por consola basada en comandos de teclado. El sistema cargará el Datamart en SQLite basándose en la configuración, procesará el histórico del *Event Store* y se suscribirá dinámicamente al bróker para recibir datos en tiempo real.
+Al iniciar el módulo **Business Unit**, se desplegará la interfaz interactiva por consola basada en comandos de teclado.
 
-> 📝 **Nota de Uso:** Para obtener mejores resultados en las coincidencias de texto, introduce sustantivos claros línea por línea (ej: "aceite oliva", "salmon", "leche").
+> 📝 **Nota de Uso:** Para obtener mejores resultados en las modificaciones de texto, introduce sustantivos claros línea por línea (ej: "aceite oliva", "salmon", "leche").
 
 ### Flujo en la Consola de Comandos
-
-Al arrancar la aplicación, verás el menú principal interactivo:
 
 ```text
 Bienvenido a la lista de compra automatica de Hiperdino!: elige una opción:
@@ -204,7 +194,7 @@ El sistema evaluará los datos cruzados de ambos supermercados y arrojará el si
 ====================================================================
 
 ====================================================================
-📊                ANÁLISIS DE PÉRDIDAS POR COMPRAR EN UN SOLO SITIO   
+📊                 ANÁLISIS DE PÉRDIDAS POR COMPRAR EN UN SOLO SITIO   
 ====================================================================
 ▶️ SI COMPRAS TODO EN MERCADONA:
    • Coste Total: 19.45€
