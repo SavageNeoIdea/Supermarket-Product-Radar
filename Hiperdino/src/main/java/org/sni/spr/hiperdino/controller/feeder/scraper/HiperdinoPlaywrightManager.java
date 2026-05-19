@@ -1,12 +1,10 @@
 package org.sni.spr.hiperdino.controller.feeder.scraper;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.sni.spr.hiperdino.controller.feeder.parser.HiperdinoUrlParser;
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitUntilState;
-import org.sni.spr.hiperdino.controller.feeder.parser.HiperdinoUrlParser;
-
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 
 public class HiperdinoPlaywrightManager implements WebScraper {
@@ -24,47 +22,10 @@ public class HiperdinoPlaywrightManager implements WebScraper {
 
     @Override
     public void startScraping(Consumer<List<String>> rawDataConsumer) {
-        this.currentDataConsumer = rawDataConsumer;
+        setCurrentDataConsumer(rawDataConsumer);
         initScraperEngine();
-        for (String url : extractLinks()) {
-            setupWithStreaming(url);
-        }
+        extractLinks().forEach(this::extractUrlProductsRawData);
         close();
-    }
-
-    private void setupWithStreaming(String url) {
-        clickUrlButton(url);
-        List<String> context = HiperdinoUrlParser.getCategorySubcategoryName(url);
-        String category = context.get(1);
-        String subcategory = context.get(2);
-        emitFirstProductPage(category, subcategory);
-        ProductResponseHandler localHandler = new ProductResponseHandler(page, subcategory, jsonBody -> {
-            currentDataConsumer.accept(List.of(jsonBody, category, subcategory));
-        });
-        localHandler.scrollUntilEnd();
-    }
-
-    private void emitFirstProductPage(String category, String subcategory) {
-        try {
-            page.waitForFunction("() => typeof gtmProductDataObject !== 'undefined'");
-            String gtmJson = (String) page.evaluate("() => JSON.stringify(gtmProductDataObject)");
-            if (gtmJson != null && !gtmJson.trim().equals("{}")) {
-                currentDataConsumer.accept(List.of(gtmJson, category, subcategory));
-            }
-        } catch (Exception e) {
-            System.err.println("Error extrayendo GTM Data inicial: " + e.getMessage());
-        }
-    }
-
-    private void clickUrlButton(String url) {
-        page.waitForLoadState(LoadState.NETWORKIDLE);
-        Locator targetCategory = page.locator(".category-group").filter(new Locator.FilterOptions().setHas(page.locator("a[href*='" + url + "']")))
-                .first();
-        if (!targetCategory.getAttribute("class").contains("dropdown-open")) {
-            targetCategory.locator(".dropdown--trigger").click();
-        }
-        targetCategory.locator("a[href*='" + url + "']").click();
-        page.waitForLoadState(LoadState.NETWORKIDLE);
     }
 
     private void initScraperEngine() {
@@ -107,9 +68,7 @@ public class HiperdinoPlaywrightManager implements WebScraper {
 
     private void testWebResponse() {
         try {
-            page.navigate("https://www.hiperdino.es", new Page.NavigateOptions()
-                    .setWaitUntil(WaitUntilState.NETWORKIDLE)
-                    .setTimeout(90000));
+
             Thread.sleep(3000 + (int)(Math.random() * 2000));
         } catch (Exception e) {
             extracted(e);
@@ -150,6 +109,92 @@ public class HiperdinoPlaywrightManager implements WebScraper {
         return urls;
     }
 
+    private void extractUrlProductsRawData(String url) {
+        click(url);
+        String category = HiperdinoUrlParser.getCategory(url);
+        String subcategory = HiperdinoUrlParser.getSubcategory(url);
+        emitFirstProductPage(category, subcategory);
+        new ProductResponseHandler(page, subcategory, jsonBody -> {
+            currentDataConsumer.accept(List.of(jsonBody, category, subcategory));
+        });
+        scrollUntilEnd();
+    }
+
+    public void scrollUntilEnd() {
+        int failureAttempts = 0;
+        final int maxFailures = 6;
+        while (failureAttempts < maxFailures) {
+            int previousCount = countProducts();
+            simulateHumanScroll();
+            failureAttempts = (pageHasNewProducts(previousCount)) ? 0 : ++failureAttempts;
+        }
+    }
+
+    private int countProducts() {
+        return page.locator(".product-list-item.flex-item.loader-over").count();
+    }
+
+    private void simulateHumanScroll() {
+        int totalScroll = ThreadLocalRandom.current().nextInt(400, 1201);
+        int currentScroll = 0;
+
+        while (currentScroll < totalScroll) {
+            int step = ThreadLocalRandom.current().nextInt(50, 151);
+            scrollPage(step);
+            currentScroll += step;
+            page.waitForTimeout(ThreadLocalRandom.current().nextInt(50, 151));
+        }
+        stochasticWait();
+    }
+
+    private void stochasticWait() {
+        page.waitForLoadState(LoadState.NETWORKIDLE);
+        if (ThreadLocalRandom.current().nextDouble() > 0.7) {
+            int randomMin = ThreadLocalRandom.current().nextInt(5000, 7000);
+            int randomMax = ThreadLocalRandom.current().nextInt(7001, 12000);
+            humanWait(randomMin, randomMax);
+        }
+    }
+
+    private void humanWait(int min, int max) {
+        try {
+            Thread.sleep(ThreadLocalRandom.current().nextLong(min, max + 1));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void scrollPage(int height) {
+        page.mouse().wheel(0, height);
+    }
+
+    private boolean pageHasNewProducts(int previousCount) {
+        return countProducts() > previousCount;
+    }
+
+    private void emitFirstProductPage(String category, String subcategory) {
+        try {
+            page.waitForFunction("() => typeof gtmProductDataObject !== 'undefined'");
+            String gtmJson = (String) page.evaluate("() => JSON.stringify(gtmProductDataObject)");
+            if (gtmJson != null && !gtmJson.trim().equals("{}")) {
+                currentDataConsumer.accept(List.of(gtmJson, category, subcategory));
+            }
+        } catch (Exception e) {
+            System.err.println("Error extrayendo GTM Data inicial: " + e.getMessage());
+        }
+    }
+
+    private void click(String url) {
+        page.waitForLoadState(LoadState.NETWORKIDLE);
+        Locator targetCategory = page.locator(".category-group").filter(new Locator.FilterOptions().setHas(page.locator("a[href*='" + url + "']")))
+                .first();
+        if (!targetCategory.getAttribute("class").contains("dropdown-open")) {
+            targetCategory.locator(".dropdown--trigger").click();
+        }
+        targetCategory.locator("a[href*='" + url + "']").click();
+        page.waitForLoadState(LoadState.NETWORKIDLE);
+    }
+
     public void close() {
         try {
             if (page != null) {
@@ -166,5 +211,8 @@ public class HiperdinoPlaywrightManager implements WebScraper {
         }
     }
     public void fill(String inputLocation, String postalCode) {page.fill(inputLocation, postalCode);}
-    public void click(String buttonLocation) {page.click(buttonLocation);}
+
+    public void setCurrentDataConsumer(Consumer<List<String>> currentDataConsumer) {
+        this.currentDataConsumer = currentDataConsumer;
+    }
 }

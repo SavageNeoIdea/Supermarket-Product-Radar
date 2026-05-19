@@ -18,35 +18,61 @@ public class HiperdinoProductNameParser implements ProductNameParser {
 
     @Override
     public void identify(String productCompleteName) {
-        this.productMatcher = productTextpattern.matcher(productCompleteName);
+        Matcher productMatcher = calculateProductMatcher(productCompleteName);
         if (productMatcher.find()) {
             identifyAttrs();
-        } else {
-            this.name = productCompleteName.trim();
-            this.qty = 1;
-            this.packageQty = 1;
-            this.measure = UnitsOfMeasurement.ud;
         }
     }
 
-    private void identifyAttrs() {
-        name = productMatcher.group(1).trim();
-        if (productMatcher.group(5) != null) {
-            qty = 1;
-            packageQty = 1;
-            measure = UnitsOfMeasurement.valueOf("cm");
-        } else {
-            qty = Integer.parseInt(productMatcher.group(3));
-            String rawUnit = productMatcher.group(4).replace(".", "");
-            measure = UnitsOfMeasurement.valueOf(rawUnit);
+    private Matcher calculateProductMatcher(String productCompleteName) {
+        return productTextpattern.matcher(productCompleteName);
+    }
 
-            if (productMatcher.group(2) != null) {
-                packageQty = Integer.parseInt(productMatcher.group(2));
-                qty = packageQty * qty;
-            } else {
-                packageQty = 1;
-            }
+    private void identifyAttrs() {
+        name = calculateName();
+        if (productHaveCm()) {
+            setProductCmDefaultData();
+        } else {
+            processStandardProduct();
         }
+    }
+
+    private void processStandardProduct() {
+        qty = calculateQty();
+        measure = calculateMeasure();
+        packageQty = productHavePackage() ? calculatePackageQty() : 1;
+        qty = packageQty * qty;
+    }
+
+    private String calculateName() {
+        return productMatcher.group(1).trim();
+    }
+
+    private int calculatePackageQty() {
+        return Integer.parseInt(productMatcher.group(2));
+    }
+
+    private boolean productHavePackage() {
+        return productMatcher.group(2) != null;
+    }
+
+    private UnitsOfMeasurement calculateMeasure() {
+        String rawUnit = productMatcher.group(4).replace(".", "");
+        return UnitsOfMeasurement.valueOf(rawUnit);
+    }
+
+    private int calculateQty() {
+       return Integer.parseInt(productMatcher.group(3));
+    }
+
+    private void setProductCmDefaultData() {
+        qty = 1;
+        packageQty = 1;
+        measure = UnitsOfMeasurement.valueOf("cm");
+    }
+
+    private boolean productHaveCm(){
+        return productMatcher.group(5) != null;
     }
 
     @Override

@@ -3,12 +3,13 @@ import org.sni.spr.hiperdino.store.ActivemqStore;
 import org.sni.spr.hiperdino.store.ConfigReader;
 import org.sni.spr.hiperdino.store.Store;
 import org.sni.spr.hiperdino.controller.Controller;
-import org.sni.spr.hiperdino.controller.feeder.HiperdinoFeeder;
+import org.sni.spr.hiperdino.controller.feeder.HiperdinoProductFeeder;
 import org.sni.spr.hiperdino.controller.feeder.scraper.HiperdinoPlaywrightManager;
 import org.sni.spr.hiperdino.controller.feeder.parser.HiperdinoProductNameParser;
 import org.sni.spr.hiperdino.controller.feeder.scraper.WebScraper;
 import java.time.DateTimeException;
 import java.time.LocalTime;
+import java.util.Map;
 
 public static void main(String[] args) {
     try {
@@ -19,11 +20,11 @@ public static void main(String[] args) {
                 loadConfig("publishers", "hiperdino").get("PostalCode"));
         Store storer = new ActivemqStore();
         Controller controller = new Controller(
-                new HiperdinoFeeder(productJsonParser, webScraper),
+                new HiperdinoProductFeeder(productJsonParser, webScraper),
                 storer
         );
         LocalTime executionTime = readAndValidateTime(configReader);
-        controller.startScheduler(executionTime);
+        controller.init();
     } catch (DateTimeException e) {
         System.err.println("Error de configuración: La hora o minutos introducidos no son válidos (Horas: 0-23, Minutos: 0-59).");
     } catch (Exception e) {
@@ -33,7 +34,7 @@ public static void main(String[] args) {
 }
 
 private static LocalTime readAndValidateTime(ConfigReader configReader) {
-    var config = configReader.loadConfig("publishers", "hiperdino");
+    Map<String, String> config = configReader.loadConfig("publishers", "hiperdino");
     int hour = Integer.parseInt(config.get("ScheduleTimeHour"));
     int minutes = Integer.parseInt(config.get("ScheduleTimeMinutes"));
     return LocalTime.of(hour, minutes);
