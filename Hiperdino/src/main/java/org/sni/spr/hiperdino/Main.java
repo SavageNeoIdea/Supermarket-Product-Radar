@@ -1,7 +1,7 @@
 import org.sni.spr.hiperdino.controller.feeder.parser.HiperdinoJsonProductParser;
-import org.sni.spr.hiperdino.controller.store.ActivemqStore;
-import org.sni.spr.hiperdino.controller.store.ConfigReader;
-import org.sni.spr.hiperdino.controller.store.Store;
+import org.sni.spr.hiperdino.store.ActivemqStore;
+import org.sni.spr.hiperdino.store.ConfigReader;
+import org.sni.spr.hiperdino.store.Store;
 import org.sni.spr.hiperdino.controller.Controller;
 import org.sni.spr.hiperdino.controller.feeder.HiperdinoFeeder;
 import org.sni.spr.hiperdino.controller.feeder.scraper.HiperdinoPlaywrightManager;

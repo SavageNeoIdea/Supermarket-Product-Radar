@@ -1,6 +1,6 @@
-package controller.store.sqlite;
-import controller.store.DatamartConnection;
-import controller.store.activemq.ConfigReader;
+package store.sqlite;
+import store.DatamartConnection;
+import store.activemq.ConfigReader;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

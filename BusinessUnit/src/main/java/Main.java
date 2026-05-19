@@ -1,12 +1,12 @@
 import controller.Controller;
 import controller.feeder.ProductFeeder;
-import controller.store.activemq.ConfigReader;
-import controller.store.reader.EventReader;
-import controller.store.activemq.ActivemqSubscriptor;
-import controller.store.sqlite.EmbeddingService;
-import controller.store.sqlite.SQLiteConnection;
-import controller.store.sqlite.SQLiteQuery;
-import controller.store.sqlite.SqLiteDatamartStore;
+import store.activemq.ConfigReader;
+import store.reader.EventReader;
+import store.activemq.ActivemqSubscriptor;
+import store.EmbeddingService;
+import store.sqlite.SQLiteConnection;
+import store.sqlite.SQLiteQuery;
+import store.sqlite.SqLiteDatamartStore;
 
 void main() {
     EmbeddingService iaService = new EmbeddingService();

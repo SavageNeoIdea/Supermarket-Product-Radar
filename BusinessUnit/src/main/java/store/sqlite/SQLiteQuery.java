@@ -1,7 +1,8 @@
-package controller.store.sqlite;
+package store.sqlite;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import controller.store.SearchQuery;
+import store.EmbeddingService;
+import store.SearchQuery;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

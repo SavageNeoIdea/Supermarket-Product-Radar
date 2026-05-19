@@ -1,4 +1,4 @@
-package controller.store;
+package store;
 
 import java.util.List;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package controller.store;
+package store;
 
 import java.sql.SQLException;
 

@@ -1,6 +1,6 @@
 package controller.shoppingListApp;
 import controller.feeder.Feeder;
-import controller.store.SearchQuery;
+import store.SearchQuery;
 import model.Product;
 import java.util.*;
 import java.util.function.Consumer;

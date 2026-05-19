@@ -1,4 +1,4 @@
-package controller.store.reader;
+package store.reader;
 
 import java.util.List;
 import java.util.Map;

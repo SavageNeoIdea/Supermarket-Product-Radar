@@ -2,7 +2,7 @@ package org.sni.spr.hiperdino.controller;
 
 import org.sni.spr.hiperdino.controller.feeder.ProductFeeder;
 import org.sni.spr.hiperdino.controller.simulationForTesting.HiperdinoSimulation;
-import org.sni.spr.hiperdino.controller.store.Store;
+import org.sni.spr.hiperdino.store.Store;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
 
 import java.time.*;

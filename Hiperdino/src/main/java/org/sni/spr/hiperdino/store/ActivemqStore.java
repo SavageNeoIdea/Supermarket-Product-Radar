@@ -1,4 +1,4 @@
-package org.sni.spr.hiperdino.controller.store;
+package org.sni.spr.hiperdino.store;
 import com.google.gson.Gson;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
 import javax.jms.*;

@@ -1,5 +1,6 @@
-package controller.store.activemq;
+package store.activemq;
 
 public interface Subscriptor {
     public void start();
+    public void close();
 }

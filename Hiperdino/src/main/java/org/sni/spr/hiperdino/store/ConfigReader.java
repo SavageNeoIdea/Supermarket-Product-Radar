@@ -1,4 +1,4 @@
-package org.sni.spr.hiperdino.controller.store;
+package org.sni.spr.hiperdino.store;
 
 import java.io.BufferedReader;
 import java.io.File;

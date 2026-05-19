@@ -1,6 +1,6 @@
 package model;
 
-import controller.store.sqlite.EmbeddingService;
+import store.EmbeddingService;
 import com.google.gson.Gson;
 
 public class Product {

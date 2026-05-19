@@ -1,4 +1,4 @@
-package controller.store.reader;
+package store.reader;
 
 import java.io.IOException;
 import java.nio.file.*;

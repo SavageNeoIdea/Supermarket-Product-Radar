@@ -1,10 +1,10 @@
 package controller;
 import controller.shoppingListApp.AppManager;
-import controller.store.DatamartStore;
-import controller.store.SearchQuery;
-import controller.store.activemq.Subscriptor;
+import store.DatamartStore;
+import store.SearchQuery;
+import store.activemq.Subscriptor;
 import model.Product;
-import controller.store.reader.DataReader;
+import store.reader.DataReader;
 import controller.feeder.Feeder;
 import java.util.List;
 import java.util.Map;
@@ -30,5 +30,6 @@ public class Controller {
         store.storeAllData(products);
         subscriptor.start();
         shoppingListManager.initApp();
+        subscriptor.close();
     }
 }

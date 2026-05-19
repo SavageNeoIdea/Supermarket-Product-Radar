@@ -1,8 +1,10 @@
-package controller.store.sqlite;
+package store.sqlite;
 
 import com.google.gson.Gson;
-import controller.store.DatamartStore;
+import store.DatamartStore;
 import model.Product;
+import store.EmbeddingService;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -44,20 +46,14 @@ public class SqLiteDatamartStore implements DatamartStore {
     @Override
     public void storeAllData(List<Product> products) {
         if (products == null || products.isEmpty()) return;
-
         long startTime = System.currentTimeMillis();
-        logInfo("Iniciando cálculo vectorial multihilo para " + products.size() + " productos...");
-
         int numCores = Runtime.getRuntime().availableProcessors();
         ExecutorService executor = Executors.newFixedThreadPool(numCores);
-
         try {
             computeEmbeddingsConcurrently(products, executor);
             long afterEmbeddings = System.currentTimeMillis();
-            logInfo("¡IA satisfecha! Tiempo de cálculo: " + (afterEmbeddings - startTime) + "ms. Guardando en SQLite...");
             persistProductsBatch(products);
             long endTime = System.currentTimeMillis();
-            logInfo("¡Lote persistido con éxito! Tiempo total: " + (endTime - startTime) + "ms.");
         } finally {
             if (!executor.isShutdown()) executor.shutdownNow();
         }
