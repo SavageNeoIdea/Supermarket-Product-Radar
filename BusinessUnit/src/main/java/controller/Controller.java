@@ -6,7 +6,6 @@ import controller.store.activemq.Subscriptor;
 import model.Product;
 import controller.store.reader.DataReader;
 import controller.feeder.Feeder;
-
 import java.util.List;
 import java.util.Map;
 

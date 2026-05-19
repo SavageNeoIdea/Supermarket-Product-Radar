@@ -25,7 +25,6 @@ public class ActivemqSubscriptor implements MessageListener, Subscriptor {
     public ActivemqSubscriptor(Feeder dataPreprocessor, DatamartStore datamartStore) {
         this.dataPreprocessor = dataPreprocessor;
         this.datamartStore = datamartStore;
-
         loadModuleConfiguration();
     }
 
@@ -83,7 +82,6 @@ public class ActivemqSubscriptor implements MessageListener, Subscriptor {
         }
     }
 
-    // SEGMENTACIÓN: Extrae el evento, descubre el 'ss' del JSON y alimenta al preprocesador
     private void processIncomingMessage(TextMessage textMessage) throws Exception {
         String event = textMessage.getText();
         String source = extractSourceFromJson(event);

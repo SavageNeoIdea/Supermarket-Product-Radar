@@ -86,7 +86,6 @@ public class ShoppingListBuilder {
         resultList.add(mercadonaMap);
         Map<String, Product> hiperdinoMap = filterMapBySource(allSourcesMap, "hiperdino");
         resultList.add(hiperdinoMap);
-
         return resultList;
     }
 

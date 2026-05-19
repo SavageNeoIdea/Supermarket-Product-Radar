@@ -19,6 +19,7 @@ public class SQLiteDatabaseInitializer {
                                                 brand TEXT,
                                                 source TEXT NOT NULL,
                                                 ts TEXT,
+                                                embedding_vector TEXT,
                                                 UNIQUE(ean, source)
                                             );
                                         """;

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ProductUtils {
+
     public static Map<String, Product> BestProductsForAnySources(Map<String, List<Product>> productInputMap) {
         Map<String, Product> inputToProductMap = new HashMap<>();
         for (Map.Entry<String, List<Product>> data : productInputMap.entrySet()){
@@ -22,19 +23,22 @@ public class ProductUtils {
 
     private static Product getProduct(Map.Entry<String, List<Product>> data) {
         Product bestProduct = null;
-        double bestProductScore = 9999;
+        double bestProductScore = Double.MAX_VALUE;
         for (Product product : data.getValue()){
-            double newDistance = getProductDistance(product);
-            if (newDistance < bestProductScore){
+            double currentScore = calculateCompoundScore(product);
+            if (currentScore < bestProductScore){
                 bestProduct = product;
-                bestProductScore = newDistance;
+                bestProductScore = currentScore;
             }
         }
         return bestProduct;
     }
 
-    public static double getProductDistance(Product product){
-        return product.getPrice() / QuantitytoSI(product);
+    public static double calculateCompoundScore(Product product){
+        double pricePerSI = product.getPrice() / QuantitytoSI(product);
+        double similarity = Math.max(0.01, product.getSimilarityScore());
+        double similarityWeight = Math.pow(similarity, 3);
+        return pricePerSI / similarityWeight;
     }
 
     public static double QuantitytoSI(Product product){
@@ -42,6 +46,4 @@ public class ProductUtils {
         double currentQuantity = product.getQuantity();
         return currentQuantity * currentUnit.getFactorToSI();
     }
-
-
 }
