@@ -8,18 +8,19 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class SQLiteQuery implements SearchQuery {
 
     private final SQLiteConnection sqLiteConnection;
-    private final IAService iaService;
+    private final EmbeddingService iaService;
     private final Gson gson;
     private final ExecutorService executorService;
+    private static final double SIMILARITY_THRESHOLD = 0.45;
+    private static final int MAX_RESULTS = 15;
+    private static final long QUERY_TIMEOUT_SECONDS = 10;
 
-    public SQLiteQuery(SQLiteConnection sqLiteConnection, IAService iaService) {
+    public SQLiteQuery(SQLiteConnection sqLiteConnection, EmbeddingService iaService) {
         this.sqLiteConnection = sqLiteConnection;
         this.iaService = iaService;
         this.gson = new Gson();
@@ -29,22 +30,50 @@ public class SQLiteQuery implements SearchQuery {
     @Override
     public Map<String, Map<String, List<String>>> searchQuery(String input) {
         Map<String, Map<String, List<String>>> data = new LinkedHashMap<>();
-        Map<String, List<String>> sourceEventMap = new HashMap<>();
-        if (haveDataInside(input, data)) {
-            data.put("", sourceEventMap);
+        if (isInputEmpty(input)) {
+            data.put("", new HashMap<>());
             return data;
         }
-        float[] vectorEntrada = iaService.obtainVector(input);
-        String sqlQuery = "SELECT source, name, price, measure, quantity, packageQuantity, brand, embedding_vector FROM product";
-        executeVectorialDatabaseQuery(sqlQuery, vectorEntrada, sourceEventMap);
+
+        float[] queryVector = iaService.getEmbeddingVector(input);
+        Map<String, List<String>> sourceEventMap = new HashMap<>();
+        String sql = "SELECT source, name, price, measure, quantity, packageQuantity, brand, embedding_vector FROM product";
+
+        List<RowData> rows = readAllRows(sql);
+        if (rows.isEmpty()) {
+            data.put(input, sourceEventMap);
+            return data;
+        }
+
+        List<Callable<ScoredProduct>> tasks = buildSimilarityTasks(rows, queryVector, sourceEventMap);
+        try {
+            List<Future<ScoredProduct>> futures = executorService.invokeAll(tasks, QUERY_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            List<ScoredProduct> candidatos = new ArrayList<>();
+            for (Future<ScoredProduct> f : futures) {
+                if (f.isCancelled()) continue;
+                try {
+                    ScoredProduct sp = f.get();
+                    if (sp != null) candidatos.add(sp);
+                } catch (ExecutionException e) {
+                    logError("Error en tarea de similitud: " + e.getCause().getMessage());
+                }
+            }
+            collectTopResults(candidatos);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("El proceso de búsqueda multihilo fue interrumpido", e);
+        }
+
         data.put(input, sourceEventMap);
         return data;
     }
 
-    private void executeVectorialDatabaseQuery(String sqlQuery, float[] vectorEntrada, Map<String, List<String>> sourceEventMap) {
-        List<ScoredProduct> candidatos = Collections.synchronizedList(new ArrayList<>());
-        ExecutorService queryExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private boolean isInputEmpty(String input) {
+        return input == null || input.trim().isEmpty();
+    }
 
+    private List<RowData> readAllRows(String sqlQuery) {
+        List<RowData> rows = new ArrayList<>();
         try (Connection conn = sqLiteConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sqlQuery);
              ResultSet rs = pstmt.executeQuery()) {
@@ -52,43 +81,49 @@ public class SQLiteQuery implements SearchQuery {
             while (rs.next()) {
                 String embeddingStr = rs.getString("embedding_vector");
                 if (embeddingStr == null || embeddingStr.isBlank()) continue;
-                String source = rs.getString("source");
-                String name = rs.getString("name");
-                double price = rs.getDouble("price");
-                String measure = rs.getString("measure");
-                int quantity = rs.getInt("quantity");
-                int packageQuantity = rs.getInt("packageQuantity");
-                String brand = rs.getString("brand");
-                queryExecutor.submit(() -> {
-                    float[] vectorProducto = gson.fromJson(embeddingStr, float[].class);
-                    double similitud = iaService.calculateSimilitude(vectorEntrada, vectorProducto);
-                    if (similitud > 0.45) {
-                        String jsonEvent = buildJsonEvent(source, name, price, measure, quantity, packageQuantity, brand, similitud);
-                        candidatos.add(new ScoredProduct(source, similitud, jsonEvent, sourceEventMap));
-                    }
-                });
+                rows.add(new RowData(
+                        rs.getString("source"),
+                        rs.getString("name"),
+                        rs.getDouble("price"),
+                        rs.getString("measure"),
+                        rs.getInt("quantity"),
+                        rs.getInt("packageQuantity"),
+                        rs.getString("brand"),
+                        embeddingStr
+                ));
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error ejecutando la lectura en la base de datos", e);
         }
-        queryExecutor.shutdown();
-        try {
-            if (!queryExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
-                System.err.println("La búsqueda vectorial tardó demasiado y fue forzada a detenerse.");
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("El proceso de búsqueda multihilo fue interrumpido", e);
-        }
-        candidatos.sort((a, b) -> Double.compare(b.similitud, a.similitud));
-        int limite = Math.min(15, candidatos.size());
-        for (int i = 0; i < limite; i++) {
-            candidatos.get(i).addToMap();
-        }
+        return rows;
     }
 
-    private boolean haveDataInside(String input, Map<String, Map<String, List<String>>> data) {
-        return input == null || input.trim().isEmpty();
+    private List<Callable<ScoredProduct>> buildSimilarityTasks(List<RowData> rows, float[] queryVector, Map<String, List<String>> targetMap) {
+        List<Callable<ScoredProduct>> tasks = new ArrayList<>(rows.size());
+        for (RowData row : rows) {
+            tasks.add(() -> {
+                try {
+                    float[] productVector = gson.fromJson(row.embeddingJson, float[].class);
+                    double similitud = iaService.computeRelevanceScore(queryVector, productVector);
+                    if (similitud > SIMILARITY_THRESHOLD) {
+                        String jsonEvent = buildJsonEvent(row.source, row.name, row.price, row.measure, row.quantity, row.packageQuantity, row.brand, similitud);
+                        return new ScoredProduct(row.source, similitud, jsonEvent, targetMap);
+                    }
+                } catch (Exception e) {
+                    logError("Error calculando similitud para producto " + row.name + " - " + e.getMessage());
+                }
+                return null;
+            });
+        }
+        return tasks;
+    }
+
+    private void collectTopResults(List<ScoredProduct> candidatos) {
+        candidatos.sort((a, b) -> Double.compare(b.similitud, a.similitud));
+        int limit = Math.min(MAX_RESULTS, candidatos.size());
+        for (int i = 0; i < limit; i++) {
+            candidatos.get(i).addToMap();
+        }
     }
 
     private String buildJsonEvent(String source, String name, double price, String measure, int quantity, int packageQuantity, String brand, double similitud) {
@@ -108,6 +143,36 @@ public class SQLiteQuery implements SearchQuery {
         return root.toString();
     }
 
+    private void logInfo(String msg) {
+        System.out.println(msg);
+    }
+
+    private void logError(String msg) {
+        System.err.println(msg);
+    }
+
+    private static class RowData {
+        final String source;
+        final String name;
+        final double price;
+        final String measure;
+        final int quantity;
+        final int packageQuantity;
+        final String brand;
+        final String embeddingJson;
+
+        RowData(String source, String name, double price, String measure, int quantity, int packageQuantity, String brand, String embeddingJson) {
+            this.source = source;
+            this.name = name;
+            this.price = price;
+            this.measure = measure;
+            this.quantity = quantity;
+            this.packageQuantity = packageQuantity;
+            this.brand = brand;
+            this.embeddingJson = embeddingJson;
+        }
+    }
+
     private static class ScoredProduct {
         final String source;
         final double similitud;
@@ -122,7 +187,7 @@ public class SQLiteQuery implements SearchQuery {
         }
 
         void addToMap() {
-            targetMap.computeIfAbsent(source, key -> new ArrayList<>()).add(jsonEvent);
+            targetMap.computeIfAbsent(source, k -> new ArrayList<>()).add(jsonEvent);
         }
     }
 }

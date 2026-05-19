@@ -1,6 +1,6 @@
 package model;
 
-import controller.store.sqlite.IAService;
+import controller.store.sqlite.EmbeddingService;
 import com.google.gson.Gson;
 
 public class Product {
@@ -30,9 +30,9 @@ public class Product {
         this.similarityScore = 1.0;
     }
 
-    public void generateEmbedding(IAService iaService, Gson gson) {
+    public void generateEmbedding(EmbeddingService iaService, Gson gson) {
         if (this.name != null && !this.name.isBlank()) {
-            float[] vector = iaService.obtainVector(this.name);
+            float[] vector = iaService.getEmbeddingVector(this.name);
             this.embeddingVector = gson.toJson(vector);
         }
     }
