@@ -96,9 +96,9 @@ Para garantizar un ecosistema mantenible, escalable y robusto, el desarrollo se 
 
 * **Patrón Publish-Subscriber (Pub/Sub):** Desacoplamiento total entre los productores de datos (scrapers) y los consumidores finales.
 * **Event Sourcing:** Salvaguarda el ciclo de vida del producto como una serie de eventos mutativos, impidiendo la sobrescritura directa de datos de precios.
-* **Patrón Strategy (en Scrapers):** Abstrae las diferentes estructuras de extracción (APIs JSON internas en Mercadona frente a la interceptación de peticiones HTTP mediante Playwright en Hiperdino) bajo un comportamiento común de aprovisionamiento de datos.
-* **Principio de Responsabilidad Única (SRP):** Alta cohesión en los componentes encargados de la ingesta, almacenamiento y proyección analítica.
-* **Inyección de Dependencias y Desacoplamiento:** Uso sistemático de **interfaces** en los puntos de integración y almacenamiento (`Store`, `WebScraper`, etc.), facilitando la sustitución de componentes (por ejemplo, cambiar el bróker o la base de datos) y la implementación de pruebas unitarias.
+* **Scrapers:** Extracción con APIs JSON internas en Mercadona frente a la interceptación de peticiones HTTP mediante Playwright en Hiperdino bajo un comportamiento común de aprovisionamiento de datos.
+* **Principio de Responsabilidad Única (SRP):** Hemos tratado de prestar bastante atención a SRP.
+* **Inyección de Dependencias y Desacoplamiento:** Uso sistemático de **interfaces** y almacenamiento (`Store`, `WebScraper`, etc.), facilitando la sustitución de componentes (por ejemplo, cambiar el bróker o la base de datos).
 
 ---
 
@@ -154,9 +154,6 @@ Toda la infraestructura de comunicación, almacenamiento local de consultas, reg
 > * **Datamart con SQLite:** Definido en `"datamartUrl"`. Actúa como nuestra *Serving Layer* e incluye optimizaciones críticas de concurrencia y velocidad como el modo WAL (`journal_mode=WAL`) y tiempos de espera (`busy_timeout=5000`).
 > * **Planificación del Scraping (Scheduler):** Los campos `"ScheduleTimeHour"` y `"ScheduleTimeMinutes"` determinan de forma exacta a qué hora del día se disparará el proceso automático de extracción de datos para cada supermercado, evitando ejecuciones redundantes y permitiendo una sincronización controlada.
 > * **Localización Regional:** Hiperdino regionaliza sus precios. El código postal de consulta se configura dinámicamente mediante la propiedad `"postalCode"`.
-> 
-> 
-
 ---
 
 ## 6. Instrucciones de Compilación y Ejecución
