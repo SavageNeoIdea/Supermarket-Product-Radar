@@ -1,6 +1,6 @@
-package org.sni.spr.store;
+package org.sni.spr.mercadona.store;
 
-import org.sni.spr.model.Product;
+import org.sni.spr.mercadona.model.Product;
 
 import java.sql.*;
 import java.time.LocalDateTime;

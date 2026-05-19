@@ -1,6 +1,6 @@
-package org.sni.spr.controller;
+package org.sni.spr.mercadona.controller;
 
-import org.sni.spr.store.Storer;
+import org.sni.spr.mercadona.store.Storer;
 
 import java.time.*;
 import java.util.List;

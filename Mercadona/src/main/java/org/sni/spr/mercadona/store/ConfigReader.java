@@ -1,4 +1,4 @@
-package org.sni.spr.store;
+package org.sni.spr.mercadona.store;
 
 import java.io.BufferedReader;
 import java.io.File;

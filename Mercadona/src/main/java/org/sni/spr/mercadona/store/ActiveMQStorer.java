@@ -1,8 +1,8 @@
-package org.sni.spr.store;
+package org.sni.spr.mercadona.store;
 
 import com.google.gson.Gson;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.sni.spr.model.Product;
+import org.sni.spr.mercadona.model.Product;
 
 import javax.jms.*;
 import java.time.Instant;

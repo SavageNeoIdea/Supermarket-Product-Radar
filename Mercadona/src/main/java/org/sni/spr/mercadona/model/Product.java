@@ -1,4 +1,4 @@
-package org.sni.spr.model;
+package org.sni.spr.mercadona.model;
 
 import java.util.List;
 import com.google.gson.annotations.SerializedName;

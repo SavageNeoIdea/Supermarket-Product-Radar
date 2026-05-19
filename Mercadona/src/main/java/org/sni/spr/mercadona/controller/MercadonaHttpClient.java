@@ -1,4 +1,4 @@
-package org.sni.spr.controller;
+package org.sni.spr.mercadona.controller;
 
 import java.io.IOException;
 import java.net.URI;

@@ -1,6 +1,6 @@
-package org.sni.spr.controller;
+package org.sni.spr.mercadona.controller;
 
-import org.sni.spr.model.Product;
+import org.sni.spr.mercadona.model.Product;
 import java.util.List;
 import java.util.function.Consumer;
 

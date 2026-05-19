@@ -1,6 +1,6 @@
-package org.sni.spr;
-import org.sni.spr.controller.*;
-import org.sni.spr.store.*;
+package org.sni.spr.mercadona;
+import org.sni.spr.mercadona.controller.*;
+import org.sni.spr.mercadona.store.*;
 import java.time.DateTimeException;
 import java.time.LocalTime;
 

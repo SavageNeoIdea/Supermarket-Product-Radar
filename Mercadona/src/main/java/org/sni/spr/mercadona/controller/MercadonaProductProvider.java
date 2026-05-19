@@ -1,4 +1,4 @@
-package org.sni.spr.controller;
+package org.sni.spr.mercadona.controller;
 
 import org.jsoup.Jsoup;
 import org.jsoup.parser.Parser;

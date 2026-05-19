@@ -1,7 +1,7 @@
-package org.sni.spr.controller;
+package org.sni.spr.mercadona.controller;
 
 import com.google.gson.Gson;
-import org.sni.spr.model.*;
+import org.sni.spr.mercadona.model.*;
 
 import java.util.List;
 import java.util.Random;
