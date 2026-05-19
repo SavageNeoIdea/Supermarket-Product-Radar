@@ -3,5 +3,5 @@ import org.sni.spr.hiperdino.model.HiperdinoProduct;
 import java.util.List;
 
 public interface ProductJsonParser {
-    List<HiperdinoProduct> parse(List<String> rawJson);
+    List<HiperdinoProduct> parse(ScraperRawPayload payload);
 }

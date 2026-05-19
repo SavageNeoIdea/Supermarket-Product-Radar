@@ -1,6 +1,8 @@
 package org.sni.spr.hiperdino.controller;
 
 import org.sni.spr.hiperdino.controller.feeder.ProductFeeder;
+import org.sni.spr.hiperdino.controller.feeder.parser.ScraperRawPayload;
+import org.sni.spr.hiperdino.controller.feeder.scraper.WebScraper;
 import org.sni.spr.hiperdino.controller.simulationForTesting.HiperdinoSimulation;
 import org.sni.spr.hiperdino.store.Store;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
@@ -13,27 +15,41 @@ import java.util.function.Consumer;
 public class Controller {
     private final ProductFeeder productFeeder;
     private final Store store;
+    private final WebScraper webScraper;
     private final ExecutorService storeExecutor = Executors.newFixedThreadPool(4);
+    private AtomicInteger productCounter;
 
-    public Controller(ProductFeeder productFeeder, Store store) {
+    public Controller(ProductFeeder productFeeder, Store store, WebScraper webScraper) {
         this.productFeeder = productFeeder;
         this.store = store;
+        this.webScraper = webScraper;
     }
 
     public void init() {
         long startTime = System.currentTimeMillis();
-        AtomicInteger productCounter = new AtomicInteger(0);
-        Consumer<HiperdinoProduct> productConsumer = getProductConsumer(productCounter);
-        productFeeder.extractNewProducts(productConsumer);
+        resetProductCounter();
+        webScraper.startScraping(getJsonConsumer());
         long endTime = System.currentTimeMillis();
         printSummary("Proceso Real", productCounter.get(), startTime, endTime);
     }
 
-    private Consumer<HiperdinoProduct> getProductConsumer(AtomicInteger productCounter) {
+    private void resetProductCounter() {
+        productCounter = new AtomicInteger(0);
+    }
+
+    private Consumer<HiperdinoProduct> getProductConsumer() {
         return product -> {
             storeWithThreads(product);
             productCounter.incrementAndGet();
         };
+    }
+
+    private Consumer<ScraperRawPayload> getJsonConsumer(){
+        return this::processRawJson;
+    }
+
+    private void processRawJson(ScraperRawPayload scraperRawPayloads) {
+        productFeeder.feed(scraperRawPayloads, getProductConsumer());
     }
 
     public void startScheduler(LocalTime executionTime) {

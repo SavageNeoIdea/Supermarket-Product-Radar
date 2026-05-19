@@ -1,86 +1,50 @@
 package org.sni.spr.hiperdino.controller.feeder.parser;
+
 import org.sni.spr.hiperdino.model.UnitsOfMeasurement;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class HiperdinoProductNameParser implements ProductNameParser {
 
-    private static final Pattern productTextpattern = Pattern.compile(
+    private static final Pattern PRODUCT_TEXT_PATTERN = Pattern.compile(
             "^(.*?)(?:\\s+(?:(\\d+)\\s*[xX]\\s*)?(\\d+)\\s*(ml|cl|l|g|kg|ud|uds\\.?)|\\s+(cm))$",
             Pattern.CASE_INSENSITIVE
     );
 
-    private String name;
-    private int qty;
-    private UnitsOfMeasurement measure;
-    private int packageQty;
-    private Matcher productMatcher;
-
     @Override
-    public void identify(String productCompleteName) {
-        Matcher productMatcher = calculateProductMatcher(productCompleteName);
-        if (productMatcher.find()) {
-            identifyAttrs();
+    public ParsedName parse(String rawName) {
+        if (rawName == null || rawName.isBlank()) {
+            return createDefaultFallback(rawName);
         }
-    }
-
-    private Matcher calculateProductMatcher(String productCompleteName) {
-        return productTextpattern.matcher(productCompleteName);
-    }
-
-    private void identifyAttrs() {
-        name = calculateName();
-        if (productHaveCm()) {
-            setProductCmDefaultData();
-        } else {
-            processStandardProduct();
+        Matcher matcher = PRODUCT_TEXT_PATTERN.matcher(rawName);
+        if (!matcher.find()) {
+            return createDefaultFallback(rawName);
         }
+        return buildParsedName(matcher);
     }
 
-    private void processStandardProduct() {
-        qty = calculateQty();
-        measure = calculateMeasure();
-        packageQty = productHavePackage() ? calculatePackageQty() : 1;
-        qty = packageQty * qty;
+    private ParsedName buildParsedName(Matcher matcher) {
+        String name = matcher.group(1).trim();
+
+        if (matcher.group(5) != null) {
+            return new ParsedName(name, 1, 1, UnitsOfMeasurement.cm);
+        }
+        int baseQty = Integer.parseInt(matcher.group(3));
+        UnitsOfMeasurement measure = mapToUnitsOfMeasurement(matcher.group(4));
+        int packageQty = (matcher.group(2) != null) ? Integer.parseInt(matcher.group(2)) : 1;
+        int totalQty = baseQty * packageQty;
+
+        return new ParsedName(name, totalQty, packageQty, measure);
     }
 
-    private String calculateName() {
-        return productMatcher.group(1).trim();
+    private UnitsOfMeasurement mapToUnitsOfMeasurement(String rawUnit) {
+        if (rawUnit == null) return UnitsOfMeasurement.ud;
+        String cleanUnit = rawUnit.replace(".", "").trim().toLowerCase();
+        return UnitsOfMeasurement.valueOf(cleanUnit);
     }
 
-    private int calculatePackageQty() {
-        return Integer.parseInt(productMatcher.group(2));
+    private ParsedName createDefaultFallback(String rawName) {
+        String safeName = (rawName != null) ? rawName.trim() : "PRODUCTO DESCONOCIDO";
+        return new ParsedName(safeName, 1, 1, UnitsOfMeasurement.ud);
     }
-
-    private boolean productHavePackage() {
-        return productMatcher.group(2) != null;
-    }
-
-    private UnitsOfMeasurement calculateMeasure() {
-        String rawUnit = productMatcher.group(4).replace(".", "");
-        return UnitsOfMeasurement.valueOf(rawUnit);
-    }
-
-    private int calculateQty() {
-       return Integer.parseInt(productMatcher.group(3));
-    }
-
-    private void setProductCmDefaultData() {
-        qty = 1;
-        packageQty = 1;
-        measure = UnitsOfMeasurement.valueOf("cm");
-    }
-
-    private boolean productHaveCm(){
-        return productMatcher.group(5) != null;
-    }
-
-    @Override
-    public String getName() { return name; }
-    @Override
-    public int getQty() { return qty; }
-    @Override
-    public UnitsOfMeasurement getMeasure() { return measure; }
-    @Override
-    public int getPackageQty() { return packageQty; }
 }

@@ -13,7 +13,6 @@ public class ProductResponseHandler {
     private final Consumer<String> onJsonCaptured;
     private final Page page;
     private final String subcategory;
-    private final List<String> capturedResponses = new ArrayList<>();
     private final Set<Integer> seenResponseHashes = new HashSet<>();
 
     public ProductResponseHandler(Page page, String subcategory, Consumer<String> rawDataConsumer) {

@@ -1,4 +1,8 @@
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.sni.spr.hiperdino.controller.feeder.ProductFeeder;
 import org.sni.spr.hiperdino.controller.feeder.parser.HiperdinoJsonProductParser;
+import org.sni.spr.hiperdino.controller.feeder.parser.ProductJsonParser;
+import org.sni.spr.hiperdino.controller.feeder.parser.ProductNameParser;
 import org.sni.spr.hiperdino.store.ActivemqStore;
 import org.sni.spr.hiperdino.store.ConfigReader;
 import org.sni.spr.hiperdino.store.Store;
@@ -14,17 +18,17 @@ import java.util.Map;
 public static void main(String[] args) {
     try {
         ConfigReader configReader = new ConfigReader();
-        HiperdinoProductNameParser productNameParser = new HiperdinoProductNameParser();
-        HiperdinoJsonProductParser productJsonParser = new HiperdinoJsonProductParser(productNameParser);
-        WebScraper webScraper = new HiperdinoPlaywrightManager(configReader.
-                loadConfig("publishers", "hiperdino").get("PostalCode"));
+        ObjectMapper objectMapper = new ObjectMapper();
+        ProductNameParser productNameParser = new HiperdinoProductNameParser();
+        ProductJsonParser productJsonParser = new HiperdinoJsonProductParser(objectMapper, productNameParser);
+        String postalCode = configReader.loadConfig("publishers", "hiperdino").get("postalCode");
+        WebScraper webScraper = new HiperdinoPlaywrightManager(postalCode);
         Store storer = new ActivemqStore();
-        Controller controller = new Controller(
-                new HiperdinoProductFeeder(productJsonParser, webScraper),
-                storer
-        );
+        ProductFeeder feeder = new HiperdinoProductFeeder(productJsonParser);
+        Controller controller = new Controller(feeder, storer, webScraper);
         LocalTime executionTime = readAndValidateTime(configReader);
         controller.init();
+
     } catch (DateTimeException e) {
         System.err.println("Error de configuración: La hora o minutos introducidos no son válidos (Horas: 0-23, Minutos: 0-59).");
     } catch (Exception e) {

@@ -52,6 +52,7 @@ public class activemqSubscriptor implements MessageListener, Subscriptor {
             if (message instanceof TextMessage textMessage) {
                 String json = textMessage.getText();
                 eventStore.saveEvent("Product", json);
+                System.out.println("Producto enviado");
             }
         } catch (JMSException e) {
             e.printStackTrace();
