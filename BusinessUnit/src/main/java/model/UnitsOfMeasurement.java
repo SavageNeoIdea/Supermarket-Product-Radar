@@ -9,6 +9,7 @@ public enum UnitsOfMeasurement {
     kg(Magnitude.MASS, 1.0),
 
     cm(Magnitude.LENGTH, 0.01),
+    m(Magnitude.LENGTH, 1.0),
 
     ud(Magnitude.QUANTITY, 1.0),
     uds(Magnitude.QUANTITY, 1.0);
