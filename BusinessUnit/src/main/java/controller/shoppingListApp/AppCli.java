@@ -21,9 +21,8 @@ public class AppCli {
         while (true) {
             System.out.println("\nBienvenido a la lista de compra automatica de Hiperdino!: elige una opción:" +
                     "\n1. Crear lista de la compra" +
-                    "\n2. Consultar una lista" +
-                    "\n3. Observar la lista creada actual" +
-                    "\n4. Salir del programa:" +
+                    "\n2. Observar la lista creada" +
+                    "\n3. Salir del programa:" +
                     "\nResponde seleccionando uno de los números del teclado: ");
 
             String input = scanner.nextLine().strip();
@@ -34,14 +33,10 @@ public class AppCli {
                     initShopList();
                 }
                 case "2" -> {
-                    System.out.println("Consultando lista...");
-                    System.out.println();
-                }
-                case "3" -> {
                     System.out.println("Cargando tu lista actual...");
                     System.out.println(cliShopListProvider.get());
                 }
-                case "4" -> {
+                case "3" -> {
                     System.out.println("Saliendo. ¡Gracias por comprar en Hiperdino!");
                     return;
                 }

@@ -19,10 +19,10 @@ public class Controller {
         this.store = store;
     }
 
-    public void startScheduler() {
+    public void startScheduler(LocalTime executionTime) {
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Atlantic/Canary"));
-        ZonedDateTime nextRun = now.withHour(19).withMinute(0).withSecond(0).withNano(0);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime nextRun = now.with(executionTime).withNano(0);
         if (now.isAfter(nextRun)) {
             nextRun = nextRun.plusDays(1);
         }
