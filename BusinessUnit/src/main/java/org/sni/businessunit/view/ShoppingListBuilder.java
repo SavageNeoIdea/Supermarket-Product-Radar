@@ -1,4 +1,5 @@
 package org.sni.businessunit.view;
+
 import org.sni.businessunit.model.Product;
 
 import java.util.*;
@@ -8,7 +9,7 @@ public class ShoppingListBuilder {
     public Map<String, Map<String, List<Product>>> productInputSourceMap;
     public Map<String, List<Product>> productInputMap;
 
-    public ShoppingListBuilder(){
+    public ShoppingListBuilder() {
         this.productInputMap = new LinkedHashMap<>();
     }
 

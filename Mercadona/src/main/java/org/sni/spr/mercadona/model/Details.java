@@ -6,5 +6,7 @@ public class Details {
     @SerializedName("mandatory_mentions")
     private String mandatoryMentions;
 
-    public String getMandatoryMentions() { return mandatoryMentions; }
+    public String getMandatoryMentions() {
+        return mandatoryMentions;
+    }
 }

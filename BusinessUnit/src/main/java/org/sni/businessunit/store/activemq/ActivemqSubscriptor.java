@@ -1,11 +1,12 @@
 package org.sni.businessunit.store.activemq;
 
-import org.sni.businessunit.controller.feeder.Feeder;
-import org.sni.businessunit.store.DatamartStore;
-import org.sni.businessunit.model.Product;
-import org.apache.activemq.ActiveMQConnectionFactory;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.sni.businessunit.controller.feeder.Feeder;
+import org.sni.businessunit.model.Product;
+import org.sni.businessunit.store.DatamartStore;
+
 import javax.jms.*;
 import java.util.List;
 import java.util.Map;
@@ -134,21 +135,24 @@ public class ActivemqSubscriptor implements MessageListener, Subscriptor {
             if (consumer != null) {
                 consumer.close();
             }
-        } catch (JMSException ignored) {}
+        } catch (JMSException ignored) {
+        }
         consumer = null;
 
         try {
             if (session != null) {
                 session.close();
             }
-        } catch (JMSException ignored) {}
+        } catch (JMSException ignored) {
+        }
         session = null;
 
         try {
             if (connection != null) {
                 connection.close();
             }
-        } catch (JMSException ignored) {}
+        } catch (JMSException ignored) {
+        }
         connection = null;
 
         running.set(false);
@@ -201,6 +205,7 @@ public class ActivemqSubscriptor implements MessageListener, Subscriptor {
     private void logInfo(String msg) {
         System.out.println("INFO: " + msg);
     }
+
     private void logError(String msg) {
         System.err.println("ERROR: " + msg);
     }

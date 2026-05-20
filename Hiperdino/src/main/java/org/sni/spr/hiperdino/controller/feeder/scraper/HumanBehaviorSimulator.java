@@ -2,6 +2,7 @@ package org.sni.spr.hiperdino.controller.feeder.scraper;
 
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.LoadState;
+
 import java.util.concurrent.ThreadLocalRandom;
 
 public class HumanBehaviorSimulator {

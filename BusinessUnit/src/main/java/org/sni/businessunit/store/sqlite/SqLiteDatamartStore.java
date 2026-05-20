@@ -1,7 +1,7 @@
 package org.sni.businessunit.store.sqlite;
 
-import org.sni.businessunit.store.DatamartStore;
 import org.sni.businessunit.model.Product;
+import org.sni.businessunit.store.DatamartStore;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,20 +13,20 @@ public class SqLiteDatamartStore implements DatamartStore {
     private final SQLiteConnection sqLiteConnection;
 
     public final String sql = """
-                                INSERT INTO product 
-                                (name, price, measure, quantity, packageQuantity, ean, brand, source, ts, embedding_vector)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                ON CONFLICT(ean, source) DO UPDATE SET
-                                    name = EXCLUDED.name,
-                                    price = EXCLUDED.price,
-                                    measure = EXCLUDED.measure,
-                                    quantity = EXCLUDED.quantity,
-                                    packageQuantity = EXCLUDED.packageQuantity,
-                                    brand = EXCLUDED.brand,
-                                    ts = EXCLUDED.ts,
-                                    embedding_vector = EXCLUDED.embedding_vector
-                                WHERE EXCLUDED.ts > product.ts;
-                            """;
+                INSERT INTO product
+                (name, price, measure, quantity, packageQuantity, ean, brand, source, ts, embedding_vector)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(ean, source) DO UPDATE SET
+                    name = EXCLUDED.name,
+                    price = EXCLUDED.price,
+                    measure = EXCLUDED.measure,
+                    quantity = EXCLUDED.quantity,
+                    packageQuantity = EXCLUDED.packageQuantity,
+                    brand = EXCLUDED.brand,
+                    ts = EXCLUDED.ts,
+                    embedding_vector = EXCLUDED.embedding_vector
+                WHERE EXCLUDED.ts > product.ts;
+            """;
 
     public SqLiteDatamartStore(SQLiteConnection sqLiteConnection) {
         this.sqLiteConnection = sqLiteConnection;

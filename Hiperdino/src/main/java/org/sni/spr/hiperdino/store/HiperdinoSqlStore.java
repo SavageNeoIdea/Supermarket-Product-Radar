@@ -1,11 +1,8 @@
 package org.sni.spr.hiperdino.store;
 
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Statement;
+
+import java.sql.*;
 import java.util.List;
 
 public class HiperdinoSqlStore implements Store {
@@ -13,24 +10,24 @@ public class HiperdinoSqlStore implements Store {
     private Connection connection;
     private PreparedStatement insertStatement;
     private String createTableSql = """
-                                    CREATE TABLE IF NOT EXISTS products (
-                                        sku TEXT,
-                                        timestamp TEXT,
-                                        uid TEXT,
-                                        ean TEXT,
-                                        brand TEXT,
-                                        category TEXT,
-                                        subcategory TEXT,
-                                        name TEXT,
-                                        qty INTEGER,
-                                        package_qty INTEGER,
-                                        measure TEXT,
-                                        price REAL,
-                                        gluten INTEGER,
-                                        image_url TEXT,
-                                        PRIMARY KEY (sku, timestamp)
-                                    );
-                                """;
+                CREATE TABLE IF NOT EXISTS products (
+                    sku TEXT,
+                    timestamp TEXT,
+                    uid TEXT,
+                    ean TEXT,
+                    brand TEXT,
+                    category TEXT,
+                    subcategory TEXT,
+                    name TEXT,
+                    qty INTEGER,
+                    package_qty INTEGER,
+                    measure TEXT,
+                    price REAL,
+                    gluten INTEGER,
+                    image_url TEXT,
+                    PRIMARY KEY (sku, timestamp)
+                );
+            """;
 
     public HiperdinoSqlStore() {
         initDatabase();
@@ -51,11 +48,11 @@ public class HiperdinoSqlStore implements Store {
 
     private void openConnection() {
         String insertSql = """
-            INSERT OR IGNORE INTO products (
-                sku, timestamp, uid, ean, brand, category, subcategory,
-                name, qty, package_qty, measure, price, gluten, image_url
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """;
+                    INSERT OR IGNORE INTO products (
+                        sku, timestamp, uid, ean, brand, category, subcategory,
+                        name, qty, package_qty, measure, price, gluten, image_url
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """;
         try {
             connection = DriverManager.getConnection(DB_URL);
             insertStatement = connection.prepareStatement(insertSql);

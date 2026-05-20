@@ -2,7 +2,8 @@ package org.sni.spr.mercadona.controller;
 
 import org.jsoup.Jsoup;
 import org.jsoup.parser.Parser;
-import java.util.*;
+
+import java.util.List;
 
 public class MercadonaProductProvider implements ProductProvider {
 

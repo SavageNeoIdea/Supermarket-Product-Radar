@@ -1,11 +1,13 @@
 package org.sni.businessunit.controller;
-import org.sni.businessunit.view.AppManager;
+
+import org.sni.businessunit.controller.feeder.Feeder;
+import org.sni.businessunit.model.Product;
 import org.sni.businessunit.store.DatamartStore;
 import org.sni.businessunit.store.SearchQuery;
 import org.sni.businessunit.store.activemq.Subscriptor;
-import org.sni.businessunit.model.Product;
 import org.sni.businessunit.store.reader.DataReader;
-import org.sni.businessunit.controller.feeder.Feeder;
+import org.sni.businessunit.view.AppManager;
+
 import java.util.List;
 import java.util.Map;
 

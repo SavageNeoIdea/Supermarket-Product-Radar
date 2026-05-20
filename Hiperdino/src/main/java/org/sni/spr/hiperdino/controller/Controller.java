@@ -4,11 +4,16 @@ import org.sni.spr.hiperdino.controller.feeder.ProductFeeder;
 import org.sni.spr.hiperdino.controller.feeder.parser.ScraperRawPayload;
 import org.sni.spr.hiperdino.controller.feeder.scraper.WebScraper;
 import org.sni.spr.hiperdino.controller.simulationForTesting.HiperdinoSimulation;
-import org.sni.spr.hiperdino.store.Store;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
+import org.sni.spr.hiperdino.store.Store;
 
-import java.time.*;
-import java.util.concurrent.*;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -44,7 +49,7 @@ public class Controller {
         };
     }
 
-    private Consumer<ScraperRawPayload> getJsonConsumer(){
+    private Consumer<ScraperRawPayload> getJsonConsumer() {
         return this::processRawJson;
     }
 
@@ -61,7 +66,7 @@ public class Controller {
 
     private long getDayDelay(LocalTime executionTime) {
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime nextRun = calculateNextRun(executionTime,now);
+        LocalDateTime nextRun = calculateNextRun(executionTime, now);
         return Duration.between(now, nextRun).toSeconds();
     }
 
@@ -75,7 +80,7 @@ public class Controller {
         };
     }
 
-    private LocalDateTime calculateNextRun(LocalTime executionTime, LocalDateTime now){
+    private LocalDateTime calculateNextRun(LocalTime executionTime, LocalDateTime now) {
         LocalDateTime nextRun = now.with(executionTime).withNano(0);
         if (now.isAfter(nextRun)) {
             nextRun = nextRun.plusDays(1);

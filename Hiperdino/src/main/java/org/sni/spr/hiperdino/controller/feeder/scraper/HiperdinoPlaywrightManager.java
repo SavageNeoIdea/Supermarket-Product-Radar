@@ -1,11 +1,13 @@
 package org.sni.spr.hiperdino.controller.feeder.scraper;
 
-import org.sni.spr.hiperdino.controller.feeder.parser.HiperdinoUrlParser;
-import com.microsoft.playwright.*;
+import com.microsoft.playwright.Locator;
+import com.microsoft.playwright.Page;
 import com.microsoft.playwright.options.LoadState;
+import org.sni.spr.hiperdino.controller.feeder.parser.HiperdinoUrlParser;
 import org.sni.spr.hiperdino.controller.feeder.parser.ScraperRawPayload;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class HiperdinoPlaywrightManager implements WebScraper {

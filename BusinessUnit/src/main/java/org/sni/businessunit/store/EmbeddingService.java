@@ -1,10 +1,12 @@
 package org.sni.businessunit.store;
+
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2q.AllMiniLmL6V2QuantizedEmbeddingModel;
+
 import java.util.Objects;
 
-public final class EmbeddingService implements SemanticEngine{
+public final class EmbeddingService implements SemanticEngine {
 
     private static final int DEFAULT_VECTOR_DIMENSION = 384;
     private final EmbeddingModel embeddingModel;

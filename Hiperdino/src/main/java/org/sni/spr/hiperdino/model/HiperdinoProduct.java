@@ -72,45 +72,59 @@ public class HiperdinoProduct {
     public UUID getHiperdinoEventId() {
         return hiperdinoEventId;
     }
+
     public Instant getHiperdinoTs() {
         return hiperdinoTs;
     }
+
     public String getHiperdinoSku() {
         return hiperdinoSku;
     }
+
     public String getHiperdinoEan() {
         return hiperdinoEan;
     }
+
     public String getHiperdinoBrand() {
         return hiperdinoBrand;
     }
+
     public String getHiperdinoCategory() {
         return hiperdinoCategory;
     }
+
     public String getHiperdinoSubcategory() {
         return hiperdinoSubcategory;
     }
+
     public String getHiperdinoName() {
         return hiperdinoName;
     }
+
     public int getHiperdinoPackageQty() {
         return hiperdinoPackageQty;
     }
+
     public int getHiperdinoQty() {
         return hiperdinoQty;
     }
+
     public String getHiperdinoMeasure() {
         return hiperdinoMeasure.name();
     }
+
     public UnitsOfMeasurement getHiperdinoMeasureEnum() {
         return hiperdinoMeasure;
     }
+
     public double getHiperdinoPrice() {
         return hiperdinoPrice;
     }
+
     public Boolean getHiperdinoGluten() {
         return hiperdinoGluten;
     }
+
     public String getHiperdinoUrlImage() {
         return hiperdinoUrlImage;
     }

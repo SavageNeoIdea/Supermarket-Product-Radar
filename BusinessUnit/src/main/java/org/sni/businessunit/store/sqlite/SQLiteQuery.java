@@ -1,8 +1,10 @@
 package org.sni.businessunit.store.sqlite;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import org.sni.businessunit.store.SemanticEngine;
 import org.sni.businessunit.store.SearchQuery;
+import org.sni.businessunit.store.SemanticEngine;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -141,9 +143,13 @@ public class SQLiteQuery implements SearchQuery {
         final int quantity, packageQuantity;
 
         RowData(String source, String name, double price, String measure, int quantity, int packageQuantity, String brand, String embeddingJson) {
-            this.source = source; this.name = name; this.price = price;
-            this.measure = measure; this.quantity = quantity;
-            this.packageQuantity = packageQuantity; this.brand = brand;
+            this.source = source;
+            this.name = name;
+            this.price = price;
+            this.measure = measure;
+            this.quantity = quantity;
+            this.packageQuantity = packageQuantity;
+            this.brand = brand;
             this.embeddingJson = embeddingJson;
         }
     }

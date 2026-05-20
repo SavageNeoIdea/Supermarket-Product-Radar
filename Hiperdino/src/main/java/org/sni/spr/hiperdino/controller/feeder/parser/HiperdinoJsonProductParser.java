@@ -3,7 +3,9 @@ package org.sni.spr.hiperdino.controller.feeder.parser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class HiperdinoJsonProductParser implements ProductJsonParser {
 

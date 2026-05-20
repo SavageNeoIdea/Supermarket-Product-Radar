@@ -1,9 +1,12 @@
 package org.sni.spr.hiperdino.controller.feeder;
+
 import org.sni.spr.hiperdino.controller.feeder.parser.ProductJsonParser;
 import org.sni.spr.hiperdino.controller.feeder.parser.ScraperRawPayload;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class HiperdinoProductFeeder implements ProductFeeder {
@@ -27,7 +30,7 @@ public class HiperdinoProductFeeder implements ProductFeeder {
                 .forEach(productConsumer);
     }
 
-    private List<HiperdinoProduct> transformToProduct(ScraperRawPayload scraperRawPayloads){
+    private List<HiperdinoProduct> transformToProduct(ScraperRawPayload scraperRawPayloads) {
         return productJsonParser.parse(scraperRawPayloads);
     }
 }

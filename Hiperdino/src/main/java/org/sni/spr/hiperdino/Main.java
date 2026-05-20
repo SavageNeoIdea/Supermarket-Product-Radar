@@ -1,16 +1,17 @@
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.sni.spr.hiperdino.controller.Controller;
+import org.sni.spr.hiperdino.controller.feeder.HiperdinoProductFeeder;
 import org.sni.spr.hiperdino.controller.feeder.ProductFeeder;
 import org.sni.spr.hiperdino.controller.feeder.parser.HiperdinoJsonProductParser;
+import org.sni.spr.hiperdino.controller.feeder.parser.HiperdinoProductNameParser;
 import org.sni.spr.hiperdino.controller.feeder.parser.ProductJsonParser;
 import org.sni.spr.hiperdino.controller.feeder.parser.ProductNameParser;
+import org.sni.spr.hiperdino.controller.feeder.scraper.HiperdinoPlaywrightManager;
+import org.sni.spr.hiperdino.controller.feeder.scraper.WebScraper;
 import org.sni.spr.hiperdino.store.ActivemqStore;
 import org.sni.spr.hiperdino.store.ConfigReader;
 import org.sni.spr.hiperdino.store.Store;
-import org.sni.spr.hiperdino.controller.Controller;
-import org.sni.spr.hiperdino.controller.feeder.HiperdinoProductFeeder;
-import org.sni.spr.hiperdino.controller.feeder.scraper.HiperdinoPlaywrightManager;
-import org.sni.spr.hiperdino.controller.feeder.parser.HiperdinoProductNameParser;
-import org.sni.spr.hiperdino.controller.feeder.scraper.WebScraper;
+
 import java.time.DateTimeException;
 import java.time.LocalTime;
 import java.util.Map;

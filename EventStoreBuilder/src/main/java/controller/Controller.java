@@ -1,4 +1,5 @@
 package controller;
+
 import store.Subscriptor;
 
 public class Controller {
@@ -8,7 +9,7 @@ public class Controller {
         this.suscriptor = suscriptor;
     }
 
-    public void init(){
+    public void init() {
         suscriptor.start();
     }
 

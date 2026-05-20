@@ -11,7 +11,7 @@ public class ProductUtils {
 
     public static Map<String, Product> BestProductsForAnySources(Map<String, List<Product>> productInputMap) {
         Map<String, Product> inputToProductMap = new HashMap<>();
-        for (Map.Entry<String, List<Product>> data : productInputMap.entrySet()){
+        for (Map.Entry<String, List<Product>> data : productInputMap.entrySet()) {
             String inputKey = data.getKey();
             Product bestProduct = getProduct(data);
             if (bestProduct != null) {
@@ -24,9 +24,9 @@ public class ProductUtils {
     private static Product getProduct(Map.Entry<String, List<Product>> data) {
         Product bestProduct = null;
         double bestProductScore = Double.MAX_VALUE;
-        for (Product product : data.getValue()){
+        for (Product product : data.getValue()) {
             double currentScore = calculateCompoundScore(product);
-            if (currentScore < bestProductScore){
+            if (currentScore < bestProductScore) {
                 bestProduct = product;
                 bestProductScore = currentScore;
             }
@@ -34,14 +34,14 @@ public class ProductUtils {
         return bestProduct;
     }
 
-    public static double calculateCompoundScore(Product product){
+    public static double calculateCompoundScore(Product product) {
         double pricePerSI = product.getPrice() / QuantitytoSI(product);
         double similarity = Math.max(0.01, product.getSimilarityScore());
         double similarityWeight = Math.pow(similarity, 3);
         return pricePerSI / similarityWeight;
     }
 
-    public static double QuantitytoSI(Product product){
+    public static double QuantitytoSI(Product product) {
         UnitsOfMeasurement currentUnit = product.getMeasure();
         double currentQuantity = product.getQuantity();
         return currentQuantity * currentUnit.getFactorToSI();

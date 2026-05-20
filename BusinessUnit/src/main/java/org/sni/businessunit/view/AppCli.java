@@ -15,7 +15,7 @@ public class AppCli {
         this.shoppingListBuilder = shoppingListBuilder;
     }
 
-    public void init(){
+    public void init() {
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
@@ -45,7 +45,7 @@ public class AppCli {
         }
     }
 
-    public void initShopList(){
+    public void initShopList() {
         System.out.println("===========================================");
         System.out.println("   🛒 ASISTENTE DE LISTA DE COMPRAS 🛒    ");
         System.out.println("===========================================");

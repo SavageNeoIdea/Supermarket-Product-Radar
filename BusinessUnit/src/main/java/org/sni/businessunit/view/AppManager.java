@@ -1,8 +1,12 @@
 package org.sni.businessunit.view;
+
 import org.sni.businessunit.controller.feeder.Feeder;
-import org.sni.businessunit.store.SearchQuery;
 import org.sni.businessunit.model.Product;
-import java.util.*;
+import org.sni.businessunit.store.SearchQuery;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
