@@ -49,7 +49,6 @@ public class SQLiteQuery implements SearchQuery {
     private List<ScoredProduct> findTopMatchingProducts(String input) {
         float[] queryVector = semanticEngine.embed(input);
         List<RowData> catalog = fetchAllProductsFromDatabase();
-
         return rankAndFilterTopProducts(catalog, queryVector);
     }
 

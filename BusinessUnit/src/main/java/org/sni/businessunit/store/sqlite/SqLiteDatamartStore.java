@@ -30,6 +30,7 @@ public class SqLiteDatamartStore implements DatamartStore {
 
     public SqLiteDatamartStore(SQLiteConnection sqLiteConnection) {
         this.sqLiteConnection = sqLiteConnection;
+        new SQLiteDatabaseInitializer(sqLiteConnection).init();
     }
 
     @Override
