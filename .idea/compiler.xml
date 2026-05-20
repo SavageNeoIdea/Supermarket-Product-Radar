@@ -7,10 +7,10 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="mercadona" />
+        <module name="hiperdino" />
+        <module name="EventStoreBuilder" />
+        <module name="BusinessUnit" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="hiperdino" target="23" />
-    </bytecodeTargetLevel>
   </component>
 </project>
