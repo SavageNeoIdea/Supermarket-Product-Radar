@@ -33,7 +33,6 @@ public class HiperdinoJsonProductParser implements ProductJsonParser {
                 allProductsInBatch.addAll(products);
             });
         } catch (Exception e) {
-            // En producción estricta, usa un Logger (SLF4J), evita System.err
             System.err.println("Error procesando JSON de Hiperdino: " + e.getMessage());
         }
         return allProductsInBatch;

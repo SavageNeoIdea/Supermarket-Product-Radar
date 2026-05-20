@@ -8,7 +8,7 @@ class HiperdinoCrawlerTest {
     @Test
     void testConstructorValidPostalCode() {
 
-        BrowserManager mockBrowserManager = new BrowserManager(true); // Podría mockearse
+        BrowserManager mockBrowserManager = new BrowserManager(true);
         assertDoesNotThrow(() -> new HiperdinoCrawler("35010", mockBrowserManager));
     }
 
