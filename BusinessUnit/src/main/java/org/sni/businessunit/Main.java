@@ -5,7 +5,6 @@ import org.sni.businessunit.store.activemq.ActivemqSubscriptor;
 import org.sni.businessunit.store.activemq.ConfigReader;
 import org.sni.businessunit.store.reader.EventReader;
 import org.sni.businessunit.store.sqlite.SQLiteConnection;
-import org.sni.businessunit.store.sqlite.SQLiteDatabaseInitializer;
 import org.sni.businessunit.store.sqlite.SQLiteQuery;
 import org.sni.businessunit.store.sqlite.SqLiteDatamartStore;
 

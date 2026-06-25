@@ -1,12 +1,10 @@
 package org.sni.businessunit.controller.feeder;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.sni.businessunit.model.Product;
 import org.sni.businessunit.store.SemanticEngine;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

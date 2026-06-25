@@ -1,16 +1,18 @@
 package controller;
-
-import store.Subscriptor;
+import store.ActivemqEventConsumer;
+import store.BrokerConsumer;
+import store.EventStore;
 
 public class Controller {
-    private final Subscriptor suscriptor;
-
-    public Controller(Subscriptor suscriptor) {
-        this.suscriptor = suscriptor;
+    private final EventStore eventStore;
+    private final BrokerConsumer consumer;
+    public Controller(EventStore eventStore, ActivemqEventConsumer consumer) {
+        this.eventStore = eventStore;
+        this.consumer = consumer;
     }
-
     public void init() {
-        suscriptor.start();
+        eventStore.prepareEventStorage();
+        consumer.startBrokerConsumer();
     }
 
 }

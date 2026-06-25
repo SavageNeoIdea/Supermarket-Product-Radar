@@ -40,7 +40,7 @@ public class ActivemqStore implements Store {
     @Override
     public synchronized void storeSingleData(HiperdinoProduct product) {
         try {
-            if (session == null) connectToActiveMQ();
+            connectToActiveMQ();
             String jsonEvent = wrapProduct(product);
             TextMessage message = session.createTextMessage(jsonEvent);
             sendMessage(message);
@@ -56,19 +56,21 @@ public class ActivemqStore implements Store {
         productList.forEach(this::storeSingleData);
     }
 
-    public void connectToActiveMQ() {
-        try {
-            System.out.println("[MQ] Connecting to ActiveMQ...");
-            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
-            connection = factory.createConnection(username, password);
-            connection.start();
-            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            topic = session.createTopic(topicName);
-            producer = session.createProducer(topic);
-            System.out.println("Connected to ActiveMQ and publisher ready for topic: " + topicName);
-        } catch (JMSException e) {
-            System.err.println("[MQ] Connection failed: " + e.getMessage());
-            throw new RuntimeException("Critical ActiveMQ error", e);
+    private void connectToActiveMQ() {
+        if (session == null) {
+            try {
+                System.out.println("[MQ] Connecting to ActiveMQ...");
+                ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
+                connection = factory.createConnection(username, password);
+                connection.start();
+                session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                topic = session.createTopic(topicName);
+                producer = session.createProducer(topic);
+                System.out.println("Connected to ActiveMQ and publisher ready for topic: " + topicName);
+            } catch (JMSException e) {
+                System.err.println("[MQ] Connection failed: " + e.getMessage());
+                throw new RuntimeException("Critical ActiveMQ error", e);
+            }
         }
     }
 

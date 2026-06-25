@@ -1,7 +1,7 @@
 package org.sni.spr.hiperdino.controller;
 
 import org.sni.spr.hiperdino.controller.feeder.ProductFeeder;
-import org.sni.spr.hiperdino.controller.feeder.parser.ScraperRawPayload;
+import org.sni.spr.hiperdino.model.RawCategoryProductBatch;
 import org.sni.spr.hiperdino.controller.feeder.scraper.WebScraper;
 import org.sni.spr.hiperdino.controller.simulationForTesting.HiperdinoSimulation;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
@@ -49,11 +49,11 @@ public class Controller {
         };
     }
 
-    private Consumer<ScraperRawPayload> getJsonConsumer() {
+    private Consumer<RawCategoryProductBatch> getJsonConsumer() {
         return this::processRawJson;
     }
 
-    private void processRawJson(ScraperRawPayload scraperRawPayloads) {
+    private void processRawJson(RawCategoryProductBatch scraperRawPayloads) {
         productFeeder.feed(scraperRawPayloads, getProductConsumer());
     }
 

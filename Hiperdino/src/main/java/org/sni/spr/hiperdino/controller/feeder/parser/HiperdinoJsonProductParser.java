@@ -3,72 +3,89 @@ package org.sni.spr.hiperdino.controller.feeder.parser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
+import org.sni.spr.hiperdino.model.RawCategoryProductBatch;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class HiperdinoJsonProductParser implements ProductJsonParser {
+public class HiperdinoJsonProductParser {
 
-    private final ObjectMapper mapper;
-    private final ProductNameParser nameParser;
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    public HiperdinoJsonProductParser(ObjectMapper mapper, ProductNameParser nameParser) {
-        this.mapper = mapper;
-        this.nameParser = nameParser;
+    private HiperdinoJsonProductParser() {
+        throw new UnsupportedOperationException("Utility class");
     }
 
-    @Override
-    public List<HiperdinoProduct> parse(ScraperRawPayload payload) {
-        List<HiperdinoProduct> allProductsInBatch = new ArrayList<>();
-        if (payload == null || payload.jsonBody() == null || payload.jsonBody().isBlank()) {
-            return allProductsInBatch;
-        }
+    public static List<HiperdinoProduct> parse(RawCategoryProductBatch payload) {
+        if (!jsonHasData(payload))
+            return List.of();
 
         try {
-            JsonNode root = mapper.readTree(payload.jsonBody());
-            JsonNode productsNode = root.has("productGtmData") ? root.get("productGtmData") : root;
+            JsonNode json = readJson(payload);
+            JsonNode productsNode = extractProductsNode(json);
+            return extractAllProducts(productsNode, payload);
 
-            productsNode.fields().forEachRemaining(entry -> {
-                List<HiperdinoProduct> products = createProductsFromNode(entry.getValue(), payload);
-                allProductsInBatch.addAll(products);
-            });
         } catch (Exception e) {
-            System.err.println("Error procesando JSON de Hiperdino: " + e.getMessage());
-        }
-        return allProductsInBatch;
-    }
-
-    private List<HiperdinoProduct> createProductsFromNode(JsonNode node, ScraperRawPayload payload) {
-        String eanField = node.path("ean").asText();
-        if (eanField == null || eanField.isBlank()) {
+            System.err.println("Error processing Hiperdino JSON: " + e.getMessage());
             return List.of();
         }
+    }
 
-        ParsedName parsedName = nameParser.parse(node.path("name").asText());
 
+    private static boolean jsonHasData(RawCategoryProductBatch payload) {
+        return payload != null &&
+                payload.jsonBody() != null &&
+                !payload.jsonBody().isBlank();
+    }
+
+    private static JsonNode readJson(RawCategoryProductBatch payload) throws Exception {
+        return MAPPER.readTree(payload.jsonBody());
+    }
+
+    private static JsonNode extractProductsNode(JsonNode root) {
+        return root.has("productGtmData") ? root.get("productGtmData") : root;
+    }
+
+    private static List<HiperdinoProduct> extractAllProducts(JsonNode productsNode, RawCategoryProductBatch payload) {
         List<HiperdinoProduct> products = new ArrayList<>();
-        String[] eans = eanField.split("\\s*,\\s*");
-
-        for (String ean : eans) {
-            products.add(new HiperdinoProduct(
-                    node.path("sku").asText(),
-                    ean,
-                    node.path("label_brand").asText(),
-                    payload.category(),
-                    payload.subcategory(),
-                    parsedName.name(),
-                    parsedName.qty(),
-                    parsedName.packageQty(),
-                    parsedName.measure(),
-                    getRawPriceAsDouble(node.path("final_price").asText()),
-                    node.path("sin_gluten").asBoolean(),
-                    node.path("image").asText()
-            ));
-        }
+        productsNode.fields().forEachRemaining(entry -> {
+            products.addAll(createProductsFromNode(entry.getValue(), payload));
+        });
         return products;
     }
 
-    private double getRawPriceAsDouble(String priceStr) {
+    private static List<HiperdinoProduct> createProductsFromNode(JsonNode node, RawCategoryProductBatch payload) {
+        String eanField = node.path("ean").asText();
+        if (isValidEan(eanField)) {
+            ParsedProductName parsedName = HiperdinoProductNameParser.parse(node.path("name").asText());
+            List<HiperdinoProduct> products = new ArrayList<>();
+            String[] eans = eanField.split("\\s*,\\s*");
+            for (String ean : eans) {
+                products.add(new HiperdinoProduct(
+                        node.path("sku").asText(),
+                        ean,
+                        node.path("label_brand").asText(),
+                        payload.category(),
+                        payload.subcategory(),
+                        parsedName.name(),
+                        parsedName.qty(),
+                        parsedName.packageQty(),
+                        parsedName.measure(),
+                        getRawPriceAsDouble(node.path("final_price").asText()),
+                        node.path("sin_gluten").asBoolean(),
+                        node.path("image").asText()
+                ));
+            }
+            return products;
+        }
+        return List.of();
+    }
+
+    private static boolean isValidEan(String eanField){
+        return !(eanField == null || eanField.isBlank());
+    }
+
+    private static double getRawPriceAsDouble(String priceStr) {
         if (priceStr == null || priceStr.isBlank()) return 0.0;
         try {
             return Double.parseDouble(priceStr.replace(",", "."));

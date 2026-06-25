@@ -1,11 +1,6 @@
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.sni.spr.hiperdino.controller.Controller;
 import org.sni.spr.hiperdino.controller.feeder.HiperdinoProductFeeder;
 import org.sni.spr.hiperdino.controller.feeder.ProductFeeder;
-import org.sni.spr.hiperdino.controller.feeder.parser.HiperdinoJsonProductParser;
-import org.sni.spr.hiperdino.controller.feeder.parser.HiperdinoProductNameParser;
-import org.sni.spr.hiperdino.controller.feeder.parser.ProductJsonParser;
-import org.sni.spr.hiperdino.controller.feeder.parser.ProductNameParser;
 import org.sni.spr.hiperdino.controller.feeder.scraper.HiperdinoPlaywrightManager;
 import org.sni.spr.hiperdino.controller.feeder.scraper.WebScraper;
 import org.sni.spr.hiperdino.store.ActivemqStore;
@@ -19,13 +14,10 @@ import java.util.Map;
 public static void main(String[] args) {
     try {
         ConfigReader configReader = new ConfigReader();
-        ObjectMapper objectMapper = new ObjectMapper();
-        ProductNameParser productNameParser = new HiperdinoProductNameParser();
-        ProductJsonParser productJsonParser = new HiperdinoJsonProductParser(objectMapper, productNameParser);
         String postalCode = configReader.loadConfig("publishers", "hiperdino").get("postalCode");
         WebScraper webScraper = new HiperdinoPlaywrightManager(postalCode);
         Store storer = new ActivemqStore();
-        ProductFeeder feeder = new HiperdinoProductFeeder(productJsonParser);
+        ProductFeeder feeder = new HiperdinoProductFeeder();
         Controller controller = new Controller(feeder, storer, webScraper);
         LocalTime executionTime = readAndValidateTime(configReader);
         controller.init();

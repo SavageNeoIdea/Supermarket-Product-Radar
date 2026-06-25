@@ -1,9 +1,8 @@
 package org.sni.spr.hiperdino.controller.feeder;
 
-import org.sni.spr.hiperdino.controller.feeder.parser.ProductJsonParser;
-import org.sni.spr.hiperdino.controller.feeder.parser.ScraperRawPayload;
+import org.sni.spr.hiperdino.controller.feeder.parser.HiperdinoJsonProductParser;
+import org.sni.spr.hiperdino.model.RawCategoryProductBatch;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -11,15 +10,13 @@ import java.util.function.Consumer;
 
 public class HiperdinoProductFeeder implements ProductFeeder {
 
-    private final ProductJsonParser productJsonParser;
 
-    public HiperdinoProductFeeder(ProductJsonParser productJsonParser) {
-        this.productJsonParser = productJsonParser;
+    public HiperdinoProductFeeder() {
     }
 
     @Override
-    public void feed(ScraperRawPayload scraperRawPayloads, Consumer<HiperdinoProduct> productConsumer) {
-        List<HiperdinoProduct> hiperdinoProductList = transformToProduct(scraperRawPayloads);
+    public void feed(RawCategoryProductBatch productJsonBatch, Consumer<HiperdinoProduct> productConsumer) {
+        List<HiperdinoProduct> hiperdinoProductList = transformToProduct(productJsonBatch);
         consumeProducts(hiperdinoProductList, productConsumer);
     }
 
@@ -30,7 +27,7 @@ public class HiperdinoProductFeeder implements ProductFeeder {
                 .forEach(productConsumer);
     }
 
-    private List<HiperdinoProduct> transformToProduct(ScraperRawPayload scraperRawPayloads) {
-        return productJsonParser.parse(scraperRawPayloads);
+    private List<HiperdinoProduct> transformToProduct(RawCategoryProductBatch ProductBatch) {
+        return HiperdinoJsonProductParser.parse(ProductBatch);
     }
 }

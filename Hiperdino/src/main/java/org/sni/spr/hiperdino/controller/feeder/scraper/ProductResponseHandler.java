@@ -13,6 +13,8 @@ public class ProductResponseHandler {
     private final String subcategory;
     private final Set<Integer> seenResponseHashes = new HashSet<>();
 
+    private final Consumer<Response> networkListener = this::handleResponse;
+
     public ProductResponseHandler(Page page, String subcategory, Consumer<String> rawDataConsumer) {
         this.page = page;
         this.onJsonCaptured = rawDataConsumer;
@@ -21,7 +23,11 @@ public class ProductResponseHandler {
     }
 
     public void setupNetworkInterceptor() {
-        page.onResponse(this::handleResponse);
+        page.onResponse(networkListener);
+    }
+
+    public void removeNetworkInterceptor() {
+        page.offResponse(networkListener);
     }
 
     private void handleResponse(Response response) {

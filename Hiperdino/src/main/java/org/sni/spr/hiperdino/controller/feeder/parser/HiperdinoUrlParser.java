@@ -8,6 +8,10 @@ import java.util.regex.Pattern;
 public class HiperdinoUrlParser {
     private static final Pattern pattern = Pattern.compile("https://www\\.hiperdino\\.es/c\\d+/([^/]+)/([^/]+).*\\.html");
 
+    private HiperdinoUrlParser() {
+        throw new UnsupportedOperationException("Utility class");
+    }
+
     public static String getCategory(String url) {
         return getCategorySubcategory(url).getFirst();
     }
