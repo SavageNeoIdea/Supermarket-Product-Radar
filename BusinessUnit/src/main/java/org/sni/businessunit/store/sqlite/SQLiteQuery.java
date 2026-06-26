@@ -1,10 +1,8 @@
 package org.sni.businessunit.store.sqlite;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.sni.businessunit.store.SearchQuery;
-import org.sni.businessunit.store.SemanticEngine;
-
+import org.sni.businessunit.controller.feeder.SemanticEngine;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,11 +13,13 @@ import java.util.*;
 public class SQLiteQuery implements SearchQuery {
 
     private static final double SIMILARITY_THRESHOLD = 0.45;
+    private static final double EXACT_MATCH_BONUS = 0.20; // Bono para la búsqueda híbrida
     private static final int MAX_RESULTS = 15;
 
     private final SQLiteConnection sqLiteConnection;
     private final SemanticEngine semanticEngine;
     private final Gson gson;
+    private List<RowData> catalogCache;
 
     public SQLiteQuery(SQLiteConnection sqLiteConnection, SemanticEngine semanticEngine) {
         this.sqLiteConnection = sqLiteConnection;
@@ -32,7 +32,10 @@ public class SQLiteQuery implements SearchQuery {
         if (isInvalidInput(input)) {
             return emptySearchResponse();
         }
-        List<ScoredProduct> topMatches = findTopMatchingProducts(input);
+        if (catalogCache == null) {
+            catalogCache = fetchAllProductsFromDatabase();
+        }
+        List<ScoredProduct> topMatches = findTopMatchingProducts(input, catalogCache);
         return formatAsSearchResponse(input, topMatches);
     }
 
@@ -41,33 +44,56 @@ public class SQLiteQuery implements SearchQuery {
     }
 
     private Map<String, Map<String, List<String>>> emptySearchResponse() {
-        Map<String, Map<String, List<String>>> emptyResult = new LinkedHashMap<>();
-        emptyResult.put("", new HashMap<>());
-        return emptyResult;
+        return Map.of("", Collections.emptyMap());
     }
 
-    private List<ScoredProduct> findTopMatchingProducts(String input) {
+    private List<ScoredProduct> findTopMatchingProducts(String input, List<RowData> catalog) {
         float[] queryVector = semanticEngine.embed(input);
-        List<RowData> catalog = fetchAllProductsFromDatabase();
-        return rankAndFilterTopProducts(catalog, queryVector);
+        String normalizedQuery = input.toLowerCase().trim();
+
+        return catalog.parallelStream()
+                .map(row -> scoreProductHybrid(row, queryVector, normalizedQuery))
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparingDouble(ScoredProduct::getScore).reversed())
+                .limit(MAX_RESULTS)
+                .toList();
+    }
+
+    private ScoredProduct scoreProductHybrid(RowData row, float[] queryVector, String queryText) {
+        try {
+            float[] productVector = gson.fromJson(row.embeddingJson, float[].class);
+            double semanticScore = semanticEngine.computeRelevance(queryVector, productVector);
+
+            if (semanticScore > SIMILARITY_THRESHOLD) {
+                double finalScore = applyLexicalBonus(semanticScore, row.name.toLowerCase(), queryText);
+                return new ScoredProduct(row, finalScore);
+            }
+        } catch (Exception e) {
+            System.err.printf("Error calculando similitud para producto [%s]: %s%n", row.name, e.getMessage());
+        }
+        return null;
+    }
+
+    private double applyLexicalBonus(double semanticScore, String productName, String queryText) {
+        String singularQuery = queryText.endsWith("s") ? queryText.substring(0, queryText.length() - 1) : queryText;
+        if (productName.contains(queryText) || productName.contains(singularQuery)) {
+            return semanticScore + EXACT_MATCH_BONUS;
+        }
+        return semanticScore;
     }
 
     private Map<String, Map<String, List<String>>> formatAsSearchResponse(String input, List<ScoredProduct> topMatches) {
-        Map<String, Map<String, List<String>>> result = new LinkedHashMap<>();
-        result.put(input, groupResultsBySource(topMatches));
-        return result;
+        return Map.of(input, groupResultsBySource(topMatches));
     }
 
     private List<RowData> fetchAllProductsFromDatabase() {
         String sql = "SELECT source, name, price, measure, quantity, packageQuantity, brand, embedding_vector FROM product";
-        return readAllRows(sql);
-    }
-
-    private List<RowData> readAllRows(String sqlQuery) {
         List<RowData> rows = new ArrayList<>();
+
         try (Connection conn = sqLiteConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sqlQuery);
+             PreparedStatement pstmt = conn.prepareStatement(sql);
              ResultSet rs = pstmt.executeQuery()) {
+
             while (rs.next()) {
                 String embeddingStr = rs.getString("embedding_vector");
                 if (embeddingStr != null && !embeddingStr.isBlank()) {
@@ -83,29 +109,6 @@ public class SQLiteQuery implements SearchQuery {
             throw new RuntimeException("Error ejecutando la lectura en la base de datos", e);
         }
         return rows;
-    }
-
-    private List<ScoredProduct> rankAndFilterTopProducts(List<RowData> catalog, float[] queryVector) {
-        return catalog.parallelStream()
-                .map(row -> scoreProduct(row, queryVector))
-                .filter(Objects::nonNull)
-                .sorted(Comparator.comparingDouble(ScoredProduct::getScore).reversed())
-                .limit(MAX_RESULTS)
-                .toList();
-    }
-
-    private ScoredProduct scoreProduct(RowData row, float[] queryVector) {
-        try {
-            float[] productVector = gson.fromJson(row.embeddingJson, float[].class);
-            double similarity = semanticEngine.computeRelevance(queryVector, productVector);
-
-            if (similarity > SIMILARITY_THRESHOLD) {
-                return new ScoredProduct(row, similarity);
-            }
-        } catch (Exception e) {
-            System.err.printf("Error calculando similitud para producto [%s]: %s%n", row.name, e.getMessage());
-        }
-        return null;
     }
 
     private Map<String, List<String>> groupResultsBySource(List<ScoredProduct> candidatos) {
@@ -133,7 +136,7 @@ public class SQLiteQuery implements SearchQuery {
         payload.addProperty("SimilarityScore", similitud);
 
         root.add("payload", payload);
-        return root.toString();
+        return gson.toJson(root); // Usamos la instancia de Gson en lugar de toString
     }
 
     private static class RowData {

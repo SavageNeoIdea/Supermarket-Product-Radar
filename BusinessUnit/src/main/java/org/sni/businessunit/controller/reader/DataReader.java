@@ -1,4 +1,4 @@
-package org.sni.businessunit.store.reader;
+package org.sni.businessunit.controller.reader;
 
 import java.util.List;
 import java.util.Map;

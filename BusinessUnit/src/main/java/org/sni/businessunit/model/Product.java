@@ -1,7 +1,6 @@
 package org.sni.businessunit.model;
-import org.sni.businessunit.store.EmbeddingService;
 import com.google.gson.Gson;
-import org.sni.businessunit.store.SemanticEngine;
+import org.sni.businessunit.controller.feeder.SemanticEngine;
 
 public class Product {
     private final String name;
@@ -14,7 +13,7 @@ public class Product {
     private final String source;
     private final String ts;
     private String embeddingVector;
-    private double similarityScore;
+    private final double similarityScore;
 
     public Product(String name, double price, String measure, int quantity, int packageQuantity, String ean, String brand, String source, String ts) {
         this.name = name;

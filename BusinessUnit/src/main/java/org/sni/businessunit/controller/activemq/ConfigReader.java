@@ -1,4 +1,4 @@
-package org.sni.businessunit.store.activemq;
+package org.sni.businessunit.controller.activemq;
 
 import java.io.BufferedReader;
 import java.io.File;

@@ -12,7 +12,6 @@ public class Publisher {
     public String getTopic() {
         return topic;
     }
-
     public String getSource() {
         return source;
     }

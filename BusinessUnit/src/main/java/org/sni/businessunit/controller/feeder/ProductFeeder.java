@@ -4,7 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.sni.businessunit.model.Product;
-import org.sni.businessunit.store.SemanticEngine;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -89,6 +89,19 @@ public class ProductFeeder implements Feeder {
                 System.err.printf("Error calculando embedding para [%s]: %s%n", product.getName(), e.getMessage());
             }
         });
+    }
+
+    @Override
+    public String extractSourceFromJson(String eventString) {
+        try {
+            JsonObject root = JsonParser.parseString(eventString).getAsJsonObject();
+            if (root.has("ss") && !root.get("ss").isJsonNull()) {
+                return root.get("ss").getAsString();
+            }
+        } catch (Exception e) {
+            System.out.println("Error parseando el JSON para extraer 'ss': " + e.getMessage());
+        }
+        return null;
     }
 
     private boolean jsonIsEmpty(Map<String, List<String>> rawJson) {

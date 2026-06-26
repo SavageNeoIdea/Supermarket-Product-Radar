@@ -1,8 +1,6 @@
 package org.sni.businessunit.store.sqlite;
-
 import org.sni.businessunit.model.Product;
 import org.sni.businessunit.store.DatamartStore;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -35,8 +33,12 @@ public class SqLiteDatamartStore implements DatamartStore {
 
     @Override
     public void storeAllData(List<Product> products) {
-        if (products == null || products.isEmpty()) return;
+        if (productListIsNotValid(products)) return;
         persistProductsBatch(products);
+    }
+
+    private boolean productListIsNotValid(List<Product> products) {
+        return products == null || products.isEmpty();
     }
 
     private void persistProductsBatch(List<Product> products) {

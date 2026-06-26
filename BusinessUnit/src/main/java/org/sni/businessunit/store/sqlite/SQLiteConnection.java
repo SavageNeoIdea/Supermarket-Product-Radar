@@ -1,8 +1,6 @@
 package org.sni.businessunit.store.sqlite;
-
 import org.sni.businessunit.store.DatamartConnection;
-import org.sni.businessunit.store.activemq.ConfigReader;
-
+import org.sni.businessunit.controller.activemq.ConfigReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;

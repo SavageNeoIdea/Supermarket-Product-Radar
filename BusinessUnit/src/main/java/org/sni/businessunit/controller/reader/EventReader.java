@@ -1,4 +1,4 @@
-package org.sni.businessunit.store.reader;
+package org.sni.businessunit.controller.reader;
 
 import java.io.IOException;
 import java.nio.file.Files;
