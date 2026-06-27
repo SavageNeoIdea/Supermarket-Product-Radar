@@ -1,46 +1,48 @@
 package org.sni.businessunit.view;
 
+import org.sni.businessunit.model.OptimizedItem;
+
+import java.util.List;
 import java.util.Scanner;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class AppCli {
     private final Consumer<String> inputStream;
-    private final Supplier<String> cliShopListProvider;
-    private final ShoppingListBuilder shoppingListBuilder;
-
-    public AppCli(Consumer<String> inputStream, Supplier<String> cliShopListProvider, ShoppingListBuilder shoppingListBuilder) {
+    private final Supplier<List<OptimizedItem>> shopListDataProvider;
+    private final ShoppingListCliBuilder shoppingListCliBuilder = new ShoppingListCliBuilder();
+    public AppCli(Consumer<String> inputStream, Supplier<List<OptimizedItem>> shopListDataProvider) {
         this.inputStream = inputStream;
-        this.cliShopListProvider = cliShopListProvider;
-        this.shoppingListBuilder = shoppingListBuilder;
+        this.shopListDataProvider = shopListDataProvider;
     }
 
     public void init() {
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
-            System.out.println("\nBienvenido a la lista de compra automatica de Hiperdino!: elige una opción:" +
+            System.out.println("\n🛒 ¡Bienvenido al Optimizador de la Lista de la Compra (Mercadona & Hiperdino)! 🛒" +
+                    "\nElige una opción:" +
                     "\n1. Crear lista de la compra" +
-                    "\n2. Observar la lista creada" +
-                    "\n3. Salir del programa:" +
+                    "\n2. Ver análisis de listas (Conjunta, Exclusivas y 'Tasa de Pereza')" +
+                    "\n3. Salir del programa" +
                     "\nResponde seleccionando uno de los números del teclado: ");
 
             String input = scanner.nextLine().strip();
 
             switch (input) {
                 case "1" -> {
-                    System.out.println("Creando lista...");
+                    System.out.println("Calculando y optimizando listas de la compra...");
                     initShopList();
                 }
                 case "2" -> {
-                    System.out.println("Cargando tu lista actual...");
-                    System.out.println(cliShopListProvider.get());
+                    System.out.println("Cargando tu análisis de compra (Conjunta vs Individual)...");
+                    System.out.println(shoppingListCliBuilder.buildShopList(shopListDataProvider.get()));
                 }
                 case "3" -> {
-                    System.out.println("Saliendo. ¡Gracias por comprar en Hiperdino!");
+                    System.out.println("Saliendo. ¡Gracias por usar el Optimizador de Compras!");
                     return;
                 }
-                default -> System.out.println("Opción no válida, inténtalo de nuevo.");
+                default -> System.out.println("❌ Opción no válida, inténtalo de nuevo.");
             }
         }
     }

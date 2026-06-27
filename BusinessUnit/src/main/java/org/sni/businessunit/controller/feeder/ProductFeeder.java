@@ -3,6 +3,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.sni.businessunit.controller.embedding.SemanticEngine;
 import org.sni.businessunit.model.Product;
 
 import java.util.ArrayList;

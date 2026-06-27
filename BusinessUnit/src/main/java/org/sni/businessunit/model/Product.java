@@ -1,6 +1,6 @@
 package org.sni.businessunit.model;
 import com.google.gson.Gson;
-import org.sni.businessunit.controller.feeder.SemanticEngine;
+import org.sni.businessunit.controller.embedding.SemanticEngine;
 
 public class Product {
     private final String name;
@@ -13,7 +13,7 @@ public class Product {
     private final String source;
     private final String ts;
     private String embeddingVector;
-    private final double similarityScore;
+    private double similarityScore;
 
     public Product(String name, double price, String measure, int quantity, int packageQuantity, String ean, String brand, String source, String ts) {
         this.name = name;
@@ -26,6 +26,20 @@ public class Product {
         this.source = source;
         this.ts = ts;
         this.embeddingVector = null;
+        this.similarityScore = 1.0;
+    }
+
+    public Product(String name, double price, String measure, int quantity, int packageQuantity, String ean, String brand, String source, String ts, String embeddingVector) {
+        this.name = name;
+        this.price = price;
+        this.measure = UnitsOfMeasurement.valueOf(measure);
+        this.quantity = quantity;
+        this.packageQuantity = packageQuantity;
+        this.ean = ean;
+        this.brand = brand;
+        this.source = source;
+        this.ts = ts;
+        this.embeddingVector = embeddingVector;
         this.similarityScore = 1.0;
     }
 
@@ -50,6 +64,10 @@ public class Product {
     public String getSource() { return source; }
     public String getTs() { return ts; }
     public String getEmbeddingVector() { return embeddingVector; }
+
+    public void setSimilarityScore(double similarityScore) {
+        this.similarityScore = similarityScore;
+    }
 
     @Override
     public String toString() {

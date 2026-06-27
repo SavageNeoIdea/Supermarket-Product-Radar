@@ -19,11 +19,9 @@ public class ActiveMqConfig {
     private void loadModuleConfiguration() {
         ConfigReader reader = new ConfigReader();
         Map<String, String> config = reader.loadConfig("subscribers", "businessUnitSubscriber");
-
         if (config == null) {
             throw new RuntimeException("ERROR: Could not load configuration for businessUnitSubscriber");
         }
-
         this.brokerUrl = config.get("brokerUrl");
         this.topicName = config.get("topicName");
         this.clientId = config.get("clientId");
