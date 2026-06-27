@@ -101,4 +101,8 @@ public class Product {
     public void setGluten(Boolean gluten) {
         this.gluten = gluten;
     }
+
+    public void setDisplayName(String displayName) { this.displayName = displayName; }
+
+    public void setBrand(String brand) { this.brand = brand; }
 }

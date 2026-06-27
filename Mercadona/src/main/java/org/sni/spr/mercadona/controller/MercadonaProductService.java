@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import org.sni.spr.mercadona.model.Category;
 import org.sni.spr.mercadona.model.Product;
 
+import java.text.Normalizer;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Consumer;
@@ -38,7 +39,7 @@ public class MercadonaProductService implements ProductService {
             Product product = gson.fromJson(json, Product.class);
             buildCategories(product);
             addGluten(product);
-            return product;
+            return sanitizeText(product);
         } catch (Exception e) {
             System.err.println("Producto ignorado (id=" + id + ") - " + e.getMessage());
             return null;
@@ -55,9 +56,30 @@ public class MercadonaProductService implements ProductService {
     }
 
     private void addGluten(Product product) {
-        String text;
-        text = product.getMandatoryMentions() != null ? product.getMandatoryMentions() : product.getDisplayName();
+        String text = product.getMandatoryMentions() != null ? product.getMandatoryMentions() : product.getDisplayName();
         text = text.toLowerCase();
         product.setGluten(text.contains("sin gluten") ? Boolean.TRUE : Boolean.FALSE);
+    }
+
+    private static Product sanitizeText(Product product) {
+        if (product == null) return null;
+        if (product.getDisplayName() != null) product.setDisplayName(cleanString(product.getDisplayName()));
+        if (product.getCategory() != null) product.setCategory(cleanString(product.getCategory()));
+        if (product.getSubcategory() != null) product.setSubcategory(cleanString(product.getSubcategory()));
+        if (product.getSubsubcategory() != null) product.setSubsubcategory(cleanString(product.getSubsubcategory()));
+        if (product.getBrand() != null) product.setBrand(cleanString(product.getBrand()));
+        return product;
+    }
+
+    private static String cleanString(String input) {
+        if (input == null || input.isBlank()) {
+            return "";
+        }
+        String text = input.trim().toLowerCase();
+        text = Normalizer.normalize(text, Normalizer.Form.NFD);
+        text = text.replaceAll("\\p{M}", "");
+        text = text.replaceAll("[^\\p{L}\\p{N}\\s]", "");
+        text = text.replaceAll("\\s{2,}", " ").trim();
+        return text;
     }
 }
