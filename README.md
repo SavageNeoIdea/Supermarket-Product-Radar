@@ -2,7 +2,7 @@
 
 ### Desarrollado por **SavageNeoIdea**
 
-Bienvenido a **Supermarket Product Radar**, una solución de software empresarial impulsada enteramente por eventos (**EDA - Event-Driven Architecture**) bajo una **Arquitectura Lambda** para la monitorización, trazabilidad histórica y optimización en tiempo real del presupuesto de la cesta de la compra.
+Bienvenido a **Supermarket Product Radar**, una solución de software empresarial impulsada enteramente por eventos (**EDA - Event-Driven Architecture**) bajo una **Arquitectura Lambda** para la optimización en tiempo real del presupuesto de la cesta de la compra.
 
 Este sistema automatiza la recopilación de productos de las cadenas Mercadona e Hiperdino, procesa la información mediante un bróker de mensajería, almacena el histórico en un *Event Store* inmutable y consolida los datos en una unidad de negocio (*Business Unit*). Al inicializarse, reconstruye el estado completo del mercado y lo actualiza continuamente de forma reactiva para calcular de forma inteligente la combinación de compra óptima mediante un **Motor de Búsqueda Semántica basado en Inteligencia Artificial**, exponiendo el denominado **"Impuesto de la pereza"**.
 
@@ -14,48 +14,73 @@ Este sistema automatiza la recopilación de productos de las cadenas Mercadona e
 
 **Supermarket Product Radar** es un ecosistema multimódulo distribuido que elimina la dependencia directa de APIs HTTP externas en caliente, apoyándose en su lugar en una red de publicación/suscripción de eventos. El sistema está compuesto por 4 módulos principales:
 
-1. **Scraper Mercadona:** Módulo con planificador integrado (*Scheduler*) configurado por horas específicas para extraer productos de la plataforma de Mercadona y publicar eventos de actualización de precios.
-2. **Scraper Hiperdino:** Módulo homólogo que extrae productos de Hiperdino mediante técnicas de web scraping distribuidas (Playwright), publicando sus eventos según la localización regional y la hora programada.
+1. **Scraper Mercadona:** Módulo con planificador integrado (*Scheduler*) configurado por horas específicas para extraer productos de la plataforma de Mercadona y publicar eventos de actualización de precios, los extrae a través de su api interno, por lo que no se pueden obtener productos locales como productos Tirma en el caso de canarias, pero existen la mayoría de productos.
+2. **Scraper Hiperdino:** Módulo homólogo que extrae productos de Hiperdino mediante técnicas de web scraping distribuidas (Playwright) haciendo uso de un código postal, publicando sus eventos según la localización regional y la hora programada.
 3. **EventStoreBuilder:** Componente encargado de escuchar de forma persistentemente los eventos de productos y almacenarlos cronológicamente en un almacén de eventos inmutable (*Event Store*).
-4. **Business Unit:** El núcleo de inteligencia de negocio. Implementa una **Arquitectura Lambda** para la gestión de datos: al arrancar, reconstruye su estado leyendo el histórico completo para inicializar su base de datos local (Datamart) impulsada por Embeddings de IA y, posteriormente, procesa eventos en tiempo real para mantener el catálogo fresco, exponiendo un motor interactivo de optimización de cestas.
+4. **Business Unit:** El núcleo de inteligencia de negocio. Implementa una **Arquitectura Lambda** para la gestión de datos: al arrancar, reconstruye su estado leyendo el histórico completo para inicializar su base de datos local (Datamart) impulsada por Embeddings de IA y, posteriormente, procesa eventos en tiempo real para mantener el catálogo fresco, exponiendo un motor interactivo de optimización de cestas. Cabe destacar que este proceso de actualización a tiempo real solo funciona cuando se hace uso de un horario de scraping, ya que el sistema está preparado para actualizar su catálogo cada X tiempo teniendo en cuenta los horarios de scrapping.
 
 ### Propuesta de Valor: El "Impuesto de la Pereza" (*Laziness Tax*)
 
 El sistema permite procesar una lista de la compra en formato de texto libre y genera automáticamente tres proyecciones financieras:
 
 * **Cesta Optimizada:** La combinación ideal y más barata del mercado, cruzando dinámicamente los productos de ambos supermercados mediante coincidencia semántica conceptual (venciendo las diferencias de nombres en el catálogo).
-* **Cesta Solo Mercadona:** Coste total si el usuario decide comprar exclusivamente en este establecimiento.
-* **Cesta Solo Hiperdino:** Coste total si el usuario decide comprar exclusivamente en este establecimiento.
+* **Cesta Solo Mercadona:** Productos añadidos y coste total si el usuario decide comprar exclusivamente en este establecimiento.
+* **Cesta Solo Hiperdino:** Productos añadidos y coste total si el usuario decide comprar exclusivamente en este establecimiento.
 
 > 💡 **Métrica Clave:** El sistema calcula y muestra explícitamente el **Análisis de Pérdidas**, que representa la cantidad exacta de dinero que el usuario pierde por la comodidad de no diversificar su compra entre ambos establecimientos (ir a uno solo en lugar de acudir a ambos cuando toca).
 
+## 2. El Motor de Inteligencia Artificial Semántica e Híbrida
+
+En el Modulo de BusinessUnit se hace uso de un motor de semántica como bien se mencionó antes.
+
+El sistema cuenta con un motor de **Búsqueda Híbrida** que combina la potencia de la recuperación semántica basada en vectores con el ajuste fino de la coincidencia léxica tradicional. No es el mejor modelo del mundo pero es lo suficientemente decente como para funcionar, premia las coincidencias exactas o de raíces de palabras críticas para el negocio alimentario ya que compara lo que escribas con lo que existe en la base de datos.
+
+### Arquitectura del Componente e Ingesta
+
+El motor está gobernado por la clase `EmbeddingService` bajo la abstracción de LangChain4j. El flujo de procesamiento se divide en tres etapas críticas:
+
+1. **Sanitización del Texto (`sanitizeText`):** Antes de cualquier cálculo, el texto se normaliza bajo el estándar Unicode NFD. Se eliminan diacríticos (acentos, tildes), caracteres especiales y mayúsculas, colapsando espacios duplicados para homogeneizar las cadenas.
+2. **Generación de Embeddings Cuantizados:** Se integra de manera nativa el modelo **`all-MiniLM-L6-v2` cuantizado** en formato ONNX. Este transforma el texto sanitizado en un vector denso de punto flotante de **384 dimensiones**. La cuantización optimiza el uso de CPU y memoria en entornos productivos.
+3. **Cálculo de Similitud:** Delegamos en funciones matemáticas nativas de LangChain4j para evitar desbordamientos o errores de precisión manuales.
+
 ---
 
-## 2. El Motor de Inteligencia Artificial Semántica
+### El Modelo Matemático del Score Híbrido
 
-El problema de las búsquedas tradicionales por cadenas de texto cruzadas (como el operador `LIKE` de SQL) es su rigidez: si un usuario busca *"aceite de oliva"*, el sistema fallará en indexar eficazmente términos como *"óleo de oliva"* o formatos abreviados específicos de la industria. Para solucionar esto, el sistema migró a un motor de **Recuperación Semántica Basada en Vectores**.
+Para determinar la relevancia final de un producto frente a la consulta del usuario, el sistema calcula una puntuación compuesta (Maximización de Score).
 
-### Modelado de Embeddings
+Si la similitud semántica inicial no supera el umbral crítico de seguridad ($0.45$), el producto es **descartado de inmediato** (retornando `null`). Si lo supera, se aplica la siguiente fórmula:
 
-El sistema integra de manera nativa la clase `IAService` acoplada al modelo preentrenado de última generación `all-MiniLM-L6-v2`. Este modelo transforma cualquier descripción textual de un producto (p. ej., *"Salmón fresco en rodajas 250g"*) en un vector denso de punto flotante en un espacio de 384 dimensiones.
+$$Score_{Hybrid} = Score_{Semantic} + Bonus_{Lexical}$$
 
-Estas dimensiones capturan las relaciones conceptuales, las categorías de alimentos y las propiedades físicas del producto de manera abstracta.
+Donde los componentes matemáticos y lógicos se definen así:
 
-### El Modelo Matemático de Puntuación (Scoring Function)
+#### 1. Similitud Semántica ($Score_{Semantic}$)
 
-Para determinar cuál es el producto óptimo que se debe emparejar con la petición en texto libre del usuario, la aplicación no solo evalúa lo bien que se describe el producto, sino también su impacto económico en la cesta. Implementamos una **función de puntuación compuesta no lineal** descrita por la siguiente fórmula matemática:
+Es el mapeo de la similitud de coseno ($\cos(\theta)$) escalado al rango cerrado de $[0, 1]$ a través de la utilidad `RelevanceScore`:
 
-$$Score = \frac{\text{Price per SI Unit}}{\text{Similarity}^3}$$
+$$Score_{Semantic} = \text{RelevanceScore}(\cos(\theta))$$
 
-Donde los componentes se definen de la siguiente manera:
+$$\cos(\theta) = \frac{\vec{A} \cdot \vec{B}}{\|\vec{A}\| \|\vec{B}\|}$$
 
-* **$\text{Price per SI Unit}$:** Representa el precio normalizado del producto calculado matemáticamente respecto a su unidad estándar del Sistema Internacional (Euros por Kilogramo o Euros por Litro). Esto garantiza una comparación justa entre un envase de 500g y uno de 1kg.
-* **$\text{Similarity}$:** Es la similitud de coseno ($\cos(\theta)$) calculada en un rango cerrado de $[0, 1]$ entre el vector de la consulta del usuario ($A$) y el vector del producto en el Datamart ($B$):
+#### Bono Léxico Dinámico ($Bonus_{Lexical}$)
 
-$$\text{Similarity} = \frac{A \cdot B}{\|A\| \|B\|} = \frac{\sum_{i=1}^{n} A_i B_i}{\sqrt{\sum_{i=1}^{n} A_i^2} \sqrt{\sum_{i=1}^{n} B_i^2}}$$
+Para asegurar que los términos clave introducidos por el usuario tengan un peso específico, el sistema aplica una bonificación según el nivel de coincidencia textual:
 
-* **El Factor Cúbico ($\text{Similarity}^3$):** Al elevar exponencialmente la similitud al cubo, penalizamos severamente cualquier desviación semántica. Si la similitud disminuye ligeramente (p. ej., de $0.95$ a $0.70$), el denominador se reduce de forma drástica ($0.95^3 \approx 0.857$ frente a $0.70^3 \approx 0.343$). Como resultado, el $Score$ final se dispara positivamente. Debido a que el sistema busca **minimizar** el $Score$, los productos con baja coincidencia conceptual o un precio unitario desorbitado quedan descartados de inmediato.
+* **Coincidencia Exacta ($+0.30$):** Si la cadena de la consulta está contenida por completo dentro del nombre del producto (o viceversa).
+* **Coincidencia Parcial por Lematización Heurística ($+0.15 + 0.02 \cdot m$):** Si no hay coincidencia exacta, el sistema descompone la consulta en palabras (mayores a 3 caracteres) y extrae su raíz matemática mediante un algoritmo de lematización secuencial para el idioma español (remoción de plurales `es`/`s` y sufijos de género `o`/`a`). Por cada raíz coincidente ($m$), se incrementa el bono.
 
+A nivel de funciones, el comportamiento del bono se resume en:
+
+$$Bonus_{Lexical} = \begin{cases} 0.30 & \text{si existe coincidencia exacta} \\ 0.15 + (0.02 \cdot m) & \text{si existen } m \text{ raíces del usuario en el producto} \\ 0 & \text{si no hay coincidencias léxicas} \end{cases}$$
+
+---
+
+### Umbrales y Control de Calidad
+
+* **`SIMILARITY_THRESHOLD = 0.45`:** Actúa como un cortafuegos semántico. Previene que productos con nula relación conceptual con la búsqueda contaminen los resultados del usuario, cancelando el procesamiento de bonos léxicos si no se cumple.
+
+Las variables SIMILARITY_THRESHOLD, EXACT_MATCH_BONUS y PARTIAL_MATCH_BONUS se encuentran en el módulo BusinessUnit en el paquete org.sni.businessUnit.embedding en la única implementación EmbeddingService, puedes modificarla si quieres juguetear con el modelo.
 ---
 
 ## 3. Arquitectura del Sistema e Infraestructura Concurrente
@@ -81,20 +106,7 @@ El sistema hace uso de una arquitectura Lambda.
 
 El flujo de información se distribuye a través de tópicos mediante el bróker de mensajería parametrizado en el archivo `config.json`:
 
-```
-[ Scraper Mercadona ] --------(Publica en: "product")--------> [ Bróker Mensajería ]
-[ Scraper Hiperdino ] --------(Publica en: "product")--------> [   tcp://61616    ]
-                                                                      |
-       +--------------------------------------------------------------+
-       | (SPEED LAYER: Suscripción en tiempo real)                    | (BATCH LAYER: Almacén Histórico)
-       v                                                              v
-[ Business Unit ]                                              [ EventStoreBuilder ]
- (Topic: "product")                                             (Topic: "product")
-       ^
-       | [BATCH LAYER: Replay inicial con Vectorización y cálculo de Embeddings]
-       + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
-
-```
+<img width="1032" height="587" alt="{F3135A59-46BC-4000-B5E6-9A47F3D371DE}" src="https://github.com/user-attachments/assets/259b749c-ceec-463e-82c0-f0c1c847f00f" />
 
 ### Arquitectura de la Aplicación (Módulos Internos)
 
@@ -123,8 +135,8 @@ Para garantizar un ecosistema mantenible, escalable y robusto, el desarrollo se 
 * **Patrón Publish-Subscriber (Pub/Sub):** Desacoplamiento total entre los productores de datos (scrapers) y los consumidores finales.
 * **Event Sourcing:** Salvaguarda el ciclo de vida del producto como una serie de eventos mutativos, impidiendo la sobrescritura directa de datos de precios.
 * **Capa de Persistencia Idempotente:** La base de datos SQLite aprovecha un mecanismo de `UPSERT` para garantizar la consistencia e idempotencia de los datos semánticos, evitando duplicar registros si el lote de eventos vuelve a ser emitido.
-* **Principio de Responsabilidad Única (SRP):** Prestamos especial atención al diseño modular; el procesamiento de archivos y la infraestructura de acceso a datos (DAOs) se mantienen completamente aislados de los componentes de análisis de Inteligencia Artificial.
-* **Inyección de Dependencias y Desacoplamiento:** Uso sistemático de **interfaces** y almacenamiento (`Store`, `WebScraper`), facilitando la sustitución de componentes y los entornos de pruebas unitarias.
+* **Principio de Responsabilidad Única (SRP):** Prestamos especial atención al diseño modular.
+* **Inyección de Dependencias y Desacoplamiento:** Uso sistemático de **interfaces** y almacenamiento (`Store`, `WebScraper`, ...), facilitando la sustitución de componentes y los entornos de pruebas unitarias.
 
 ---
 
@@ -186,18 +198,9 @@ Para garantizar la estabilidad del sistema y evitar fallos de ejecución, es fun
 
 #### Parámetros Modificables y Buenas Prácticas
 
-* **Evitar Interbloqueos (Deadlocks) en la Base de Datos:** En la propiedad `datamartUrl`, se recomienda encarecidamente mantener todos los parámetros incluidos tras el signo de interrogación (`?journal_mode=WAL&busy_timeout=5000`). Esta configuración activa el modo de escritura adelantada (*Write-Ahead Logging*) y define un tiempo de espera para evitar conflictos concurrentes (interbloqueos) cuando el motor de optimización consulta la base de datos al mismo tiempo que el bróker escribe nuevos eventos en tiempo real. Modifica esto únicamente si vas a migrar la persistencia a otro motor de base de datos.
 * **Consistencia de Red y Seguridad:** Todos los bloques de configuración deben compartir exactamente los mismos valores para las propiedades `topicName`, `brokerUrl`, `username` y `password` para garantizar que scrapers, almacén y unidad de negocio operen bajo el mismo bus de comunicación masiva.
 * **Identificadores de Conexión:** Los campos `clientId` y `subscriptionName` son de libre elección para el administrador, asegurando que cada cliente mantenga una sesión única e identificable dentro del bróker de mensajería.
 * **Planificación Horaria del Scraping:** Las propiedades `ScheduleTimeHour` y `ScheduleTimeMinutes` determinan la hora exacta en la que se disparará el proceso automático de extracción de datos para cada supermercado de forma diaria. El planificador toma como referencia la **hora local** del dispositivo o servidor donde se esté ejecutando el módulo.
----
-
-Aquí tienes el bloque completo y unificado para la sección **6. Instrucciones de Compilación y Ejecución**.
-
-Respecto a tu duda sobre Maven: **sí, es una idea fantástica añadir un comando**. En proyectos multimódulo de Java, en lugar de compilar o descargar dependencias módulo por módulo, puedes ejecutar un único comando desde la raíz del proyecto. Esto le descarga la vida al usuario y asegura que todas las dependencias (incluido Playwright, las librerías de IA y los drivers de SQLite) se descarguen de golpe y de forma limpia en todo el ecosistema.
-
-He unificado todos los puntos (requisitos, configuración en IntelliJ, trucos del scheduler y el orden de encendido) en una sola guía fluida y súper profesional:
-
 ---
 
 ## 6. Instrucciones de Compilación y Ejecución
@@ -206,16 +209,20 @@ Para garantizar la integridad de la arquitectura Lambda, evitar la pérdida de m
 
 ### Requisitos Previos y Configuración del Entorno
 
-* **Bróker de Mensajería:** Tener instalado y en ejecución un bróker de mensajería (como Apache ActiveMQ o Artemis) escuchando en el puerto configurado (por defecto, `tcp://localhost:61616`).
+* **Bróker de Mensajería:** Tener instalado y en ejecución un bróker de mensajería (Actualmente, el único implementado es **Apache ActiveMQ**) escuchando en el puerto configurado (por defecto, `tcp://localhost:61616`, lo puedes cambiar en el `config.json`, cambiando el atributo `brokerUrl` de los 4 módulos).
 * **Fichero de Configuración:** Asegurar que el archivo `config.json` esté correctamente ubicado en la raíz del directorio principal que engloba todos los módulos del proyecto.
 * **Entorno de Desarrollo (IDE Recomendado):** Se requiere el uso de **IntelliJ IDEA**. El proyecto delega en este IDE la gestión automática del ciclo de vida y las dependencias de herramientas del sistema (como la instalación interna y ejecución transparente de Chromium para el módulo de Web Scraping automatizado por Playwright), garantizando un despliegue sin configuraciones adicionales en el sistema operativo.
-* **Versión de Java y SDK:** El ecosistema está desarrollado bajo **Microsoft OpenJDK 21** y requiere un nivel de lenguaje (**Language Level**) fijado estrictamente en **21** para soportar las características modernas de concurrencia y estructuras de datos utilizadas.
+* **Versión de Java y SDK:** El ecosistema está desarrollado bajo **Microsoft OpenJDK 21** y requiere un nivel de lenguaje (**Language Level**) fijado estrictamente en **21 - Record patterns, pattern matching for switch**.
 
 ---
 
 ### Configuración del Proyecto en IntelliJ IDEA
 
-Al abrir el proyecto por primera vez, realiza estos dos pasos para que el entorno entienda la disposición de los módulos y use el compilador correcto:
+Al abrir el proyecto por primera vez, encontrarás los 4 módulos, el readme, el config.json y una carpeta de eventstore/product con eventos de prueba (estan organizados por fecha en formato YYYYMMDD, el sistema cogerá la fecha mas reciente):
+
+<img width="1918" height="1003" alt="{466B208E-4F36-4294-8201-96B5FEF37286}" src="https://github.com/user-attachments/assets/aa908bc0-661c-4537-b8e4-6bbc7107811d" />
+
+Realiza estos dos pasos para que el entorno entienda la disposición de los módulos y use el compilador correcto:
 
 #### Paso 1: Configurar el JDK y Language Level 21
 
@@ -241,13 +248,11 @@ Copia y pega en la terminal el comando correspondiente al sistema operativo en e
 * **Si estás en Windows (PowerShell por defecto en IntelliJ):**
 ```powershell
 Get-ChildItem -Recurse -Filter pom.xml | ForEach-Object { mvn -f $_.FullName clean install -DskipTests }
-
 ```
 
 * **Si estás en Linux / macOS (Bash / Zsh):**
 ```bash
 find . -name "pom.xml" -exec mvn -f {} clean install -DskipTests \;
-
 ```
 
 > 💡 **¿Qué hace este comando?** Escanea automáticamente todo el árbol de directorios, localiza cada archivo `pom.xml` individual (de cada supermercado, el almacén y la unidad de negocio) y le aplica el ciclo de vida de Maven (`clean install`) de manera secuencial utilizando el parámetro `-f` para forzar el apuntado.
@@ -259,16 +264,24 @@ find . -name "pom.xml" -exec mvn -f {} clean install -DskipTests \;
 
 Por defecto, los scrapers esperan a la hora configurada en el `config.json`. Si deseas **forzar una ejecución inmediata** para probar el sistema sin esperar a la hora programada, realiza la siguiente modificación en los puntos de entrada:
 
-* **Módulo Hiperdino:** Dirígete al archivo `Main.java`, localiza la línea 19, sustituye la lógica del *scheduler* posterior a la instancia del controlador e invoca directamente al método de inicialización:
-Vamos, borra la linea 19 y escribe eso:
+* **Módulo Hiperdino:** Dirígete al archivo `Main.java`, localiza la línea 23, sustituye la lógica del *scheduler* posterior a la instancia del controlador e invoca directamente al método de inicialización:
+Vamos, borra la linea 23 y copia tal cual lo siguiente (executionTime se saca automáticamente):
 ```java
-controller.init();
+controller.startScheduler(executionTime);
+```
+En caso de querer volver a la versión con sheduler:
+```java
+
 ```
 
-* **Módulo Mercadona:** Realiza el mismo procedimiento en su respectivo `Main.java` (línea 19), reemplazando el código del planificador por la ejecución directa del flujo pasando la URL del sitemap:
-Vamos, borra la linea 19 y escribe eso:
+* **Módulo Mercadona:** Realiza el mismo procedimiento en su respectivo `Main.java` (línea 23), reemplazando el código del planificador por la ejecución directa del flujo pasando la URL del sitemap:
+Vamos, borra la linea 23 y copia tal cual lo siguiente (sitemapUrl y executionTime se sacan automáticamente, no tienes que hacer nada mas)
 ```java
 controller.run(sitemapUrl);
+```
+En caso de querer volver a la versión con sheduler:
+```java
+controller.scheduleDailyRun(sitemapUrl, executionTime);
 ```
 ---
 
@@ -277,23 +290,20 @@ controller.run(sitemapUrl);
 Una vez compilado todo limpiamente, ejecuta las clases `Main.java` de los componentes en este orden exacto para permitir la correcta sincronización de las capas de datos distribuidas:
 
 1. **Levantar el Bróker de Mensajería:** Fase de Infraestructura.
-Asegúrate de que la instancia de tu bróker (ActiveMQ/Artemis) esté operativa y aceptando conexiones de red en el puerto configurado (`61616`).
-
+Asegúrate de que la instancia de tu bróker (ActiveMQ o cualquier nueva implementación que quieras) esté operativa y aceptando conexiones de red en el puerto configurado (`61616`).
 
 2. **Iniciar el Event Store (EventStoreBuilder):** Fase de Almacenamiento.
 Ejecuta la clase `Main.java` dentro del módulo `EventStoreBuilder`. Este componente se mantendrá en escucha persistente y comenzará a registrar de forma inmutable en el disco cualquier flujo de datos entrante.
 
-
 3. **Desplegar la Unidad de Negocio (Business Unit):** Fase de Inteligencia.
 Ejecuta la clase `Main.java` del módulo `BusinessUnit`. Al arrancar, el sistema se conectará a la base de datos local SQLite, activará el pool de hilos concurrente para procesar el **Replay de la Capa Batch** (traduciendo los datos históricos del paso anterior a vectores de IA) y, al finalizar, dejará abierta la escucha en la **Capa Speed** para capturar actualizaciones en tiempo real.
 
-
 4. **Activar los Scrapers de Origen:** Fase de Alimentación.
-Ejecuta las clases `Main.java` de los módulos `Hiperdino` y `Mercadona`. Estos activarán sus tareas programadas basadas en el archivo de configuración (o se ejecutarán de inmediato si aplicaste el cambio opcional en las líneas 19) para comenzar a nutrir de datos al radar.
+Ejecuta las clases `Main.java` de los módulos `Hiperdino` y `Mercadona`. Estos activarán sus tareas programadas basadas en el archivo de configuración (o se ejecutarán de inmediato si aplicaste el cambio opcional en las líneas 23) para comenzar a nutrir de datos al radar.
 
 ## 7. Ejemplos de Uso e Interacción
 
-Al iniciar el módulo **Business Unit**, se desplegará la interfaz interactiva por consola basada en comandos de teclado. Puedes introducir tus términos de búsqueda de forma completamente natural gracias a la capa semántica de la IA.
+Al iniciar el módulo **Business Unit**, después de un breve lapso de tiempo donde se reconstruye el último día de cada topic/source del eventsotre como un datamart y se inicie la conexión con el activeMQ (si está encendido), se desplegará la interfaz interactiva por consola basada en comandos de teclado. Puedes introducir tus términos de búsqueda y la IA tratará de buscar un top 5 de aquellos resultados que mas se adecuen, a veces puede fallar, hemos implementado un top 5 para que puedas elegir o saltartelo en caso de no encontrar una respuesta satisfactoria.
 
 ### Flujo en la Consola de Comandos
 
