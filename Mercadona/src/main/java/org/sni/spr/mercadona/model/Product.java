@@ -74,7 +74,7 @@ public class Product {
     }
 
     public double getUnitSize() {
-        return priceInstructions != null ? priceInstructions.unitSize : 0.0;
+        return priceInstructions != null ? priceInstructions.unitSize : 1.0;
     }
 
     public String getUnitType() {
@@ -82,7 +82,7 @@ public class Product {
     }
 
     public int getTotalUnits() {
-        return priceInstructions != null ? priceInstructions.totalUnits : 0;
+        return priceInstructions != null ? priceInstructions.totalUnits : 1;
     }
 
 
