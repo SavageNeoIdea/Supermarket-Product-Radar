@@ -1,10 +1,8 @@
 package org.sni.spr.hiperdino.controller.feeder.parser;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
 import org.sni.spr.hiperdino.model.RawCategoryProductBatch;
-
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;

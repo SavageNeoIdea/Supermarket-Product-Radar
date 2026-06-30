@@ -1,5 +1,6 @@
 package org.sni.businessunit.controller.activemq;
-import javax.jms.*;
+
+import jakarta.jms.*;
 import java.util.function.Consumer;
 
 public class ActiveMqSubscriptor implements MessageListener, Subscriptor {
@@ -23,11 +24,11 @@ public class ActiveMqSubscriptor implements MessageListener, Subscriptor {
         }
         this.onMessageCallback = onMessageCallback;
         try {
-            connection = ActiveMqConnectionFactory.createConnection(activeMqConfig.getBrokerUrl(),
-                    activeMqConfig.getClientId(),activeMqConfig.getUsername(), activeMqConfig.getPassword());
+            connection = ActiveMqConnectionFactory.createConnection(activeMqConfig.brokerUrl(),
+                    activeMqConfig.clientId(),activeMqConfig.username(), activeMqConfig.password());
             session = createNewSession(connection);
-            Topic topic = session.createTopic(activeMqConfig.getTopicName());
-            consumer = session.createDurableSubscriber(topic, activeMqConfig.getSubscriptionName());
+            Topic topic = session.createTopic(activeMqConfig.topicName());
+            consumer = session.createDurableSubscriber(topic, activeMqConfig.subscriptionName());
             consumer.setMessageListener(this);
             connection.start();
             isRunning = true;

@@ -1,9 +1,8 @@
 package org.sni.businessunit.controller.embedding;
 
-import org.sni.businessunit.model.Product;
-
 public interface SemanticEngine {
-    float[] embed(String text);
+    float[] embedInput(String text);
     double computeRelevance(float[] vectorA, float[] vectorB);
-    Product scoreProductHybrid(Product product, float[] queryVector, String queryText);
+    String embedToString(String embeddingVector);
+    Double calculateHybridScore(float[] productVector, String productText, float[] queryVector, String queryText);
 }

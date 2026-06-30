@@ -10,7 +10,6 @@ import java.util.function.Consumer;
 
 public class HiperdinoProductFeeder implements ProductFeeder {
 
-
     public HiperdinoProductFeeder() {
     }
 

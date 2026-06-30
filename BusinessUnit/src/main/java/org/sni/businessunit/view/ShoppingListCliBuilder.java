@@ -1,6 +1,5 @@
 package org.sni.businessunit.view;
-
-import org.sni.businessunit.model.OptimizedItem;
+import org.sni.businessunit.model.DefinitiveOptimizedItem;
 import org.sni.businessunit.model.Product;
 import java.util.List;
 
@@ -9,7 +8,7 @@ public class ShoppingListCliBuilder {
     private static final String SEPARATOR = "====================================================================";
     private static final String NL = System.lineSeparator();
 
-    public String buildShopList(List<OptimizedItem> optimizedItems) {
+    public String buildShopList(List<DefinitiveOptimizedItem> optimizedItems) {
         if (optimizedItems == null || optimizedItems.isEmpty()) {
             return "Error: No hay suficientes datos para calcular las listas de la compra.";
         }
@@ -34,9 +33,9 @@ public class ShoppingListCliBuilder {
                 .append("🛒            3. LISTA DE LA COMPRA EXCLUSIVA EN HIPERDINO          ").append(NL)
                 .append(SEPARATOR).append(NL);
 
-        for (OptimizedItem item : optimizedItems) {
+        for (DefinitiveOptimizedItem item : optimizedItems) {
 
-            Product jointProd = item.jointBest();
+            Product jointProd = item.selectedJoint();
             if (jointProd != null) {
                 appendProductLine(sbJoint, jointProd);
                 jointTotal += jointProd.getPrice();
@@ -44,7 +43,7 @@ public class ShoppingListCliBuilder {
                 sbJoint.append(String.format("- [NO DISP.] %s: Producto no disponible para optimizar%s", item.userInput(), NL));
             }
 
-            Product mercadonaProd = item.mercadonaBest();
+            Product mercadonaProd = item.selectedMercadona();
             if (mercadonaProd != null) {
                 appendProductLine(sbMercadona, mercadonaProd);
                 mercadonaTotal += mercadonaProd.getPrice();
@@ -52,7 +51,7 @@ public class ShoppingListCliBuilder {
                 sbMercadona.append(String.format("- [MERCADONA] %s: ❌ No disponible en esta tienda%s", item.userInput(), NL));
             }
 
-            Product hiperdinoProd = item.hiperdinoBest();
+            Product hiperdinoProd = item.selectedHiperdino();
             if (hiperdinoProd != null) {
                 appendProductLine(sbHiperdino, hiperdinoProd);
                 hiperdinoTotal += hiperdinoProd.getPrice();
@@ -89,7 +88,7 @@ public class ShoppingListCliBuilder {
     }
 
     private void appendProductLine(StringBuilder sb, Product p) {
-        sb.append(String.format("- [%-10s] %-30s: %.2f€ | Cantidad: %d (%s)%s",
+        sb.append(String.format("- [%-10s] %-30s: %.2f€ | Cantidad: %.2f (%s)%s",
                 p.getSource().toUpperCase(), p.getName(), p.getPrice(), p.getQuantity(), p.getMeasure(), NL));
     }
 

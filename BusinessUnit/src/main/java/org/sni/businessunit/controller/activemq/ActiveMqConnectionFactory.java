@@ -1,14 +1,13 @@
 package org.sni.businessunit.controller.activemq;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-
-import javax.jms.Connection;
-import javax.jms.JMSException;
+import jakarta.jms.Connection;
+import jakarta.jms.JMSException;
 
 public class ActiveMqConnectionFactory {
 
     public static Connection createConnection(String brokerUrl, String clientId, String username, String password) throws JMSException {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
+        ActiveMQConnectionFactory factory = new org.apache.activemq.ActiveMQConnectionFactory(brokerUrl);
         factory.setTrustAllPackages(true);
         Connection newConnection = createJmsConnection(factory, username, password);
         if (clientIdIsValid(clientId))

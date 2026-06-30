@@ -2,7 +2,6 @@ package org.sni.businessunit.controller.shoppinglist;
 
 import org.sni.businessunit.model.Product;
 import org.sni.businessunit.store.sqlite.SQLiteConnection;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -31,7 +30,7 @@ public class ProductCharger {
                             rs.getString("name"),
                             rs.getDouble("price"),
                             rs.getString("measure"),
-                            rs.getInt("quantity"),
+                            rs.getDouble("quantity"),
                             rs.getInt("packageQuantity"),
                             rs.getString("ean"),
                             rs.getString("brand"),
@@ -47,6 +46,21 @@ public class ProductCharger {
             throw new RuntimeException("Error en los datos de la base de datos (posible fallo en enum o campo nulo)", e);
         }
         return products;
+    }
+
+    public String getLatestTimestamp() {
+        String sql = "SELECT MAX(ts) FROM Product";
+        try (var conn = sqLiteConnection.getConnection();
+             var stmt = conn.createStatement();
+             var rs = stmt.executeQuery(sql)) {
+
+            if (rs.next()) {
+                return rs.getString(1);
+            }
+        } catch (Exception e) {
+            System.err.println("Error obteniendo el timestamp más reciente: " + e.getMessage());
+        }
+        return null;
     }
 
     private static boolean productHaveEmbedding(String embeddingStr) {

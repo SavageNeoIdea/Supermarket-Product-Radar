@@ -19,13 +19,13 @@ public class SQLiteDatabaseInitializer {
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             name TEXT NOT NULL,
                             price REAL NOT NULL,
-                            measure TEXT,
-                            quantity INTEGER,
-                            packageQuantity INTEGER,
+                            measure TEXT NOT NULL,
+                            quantity REAL NOT NULL,
+                            packageQuantity INTEGER NOT NULL,
                             ean TEXT NOT NULL,
-                            brand TEXT,
+                            brand TEXT NOT NULL,
                             source TEXT NOT NULL,
-                            ts TEXT,
+                            ts TEXT NOT NULL,
                             embedding_vector TEXT,
                             UNIQUE(ean, source)
                         );

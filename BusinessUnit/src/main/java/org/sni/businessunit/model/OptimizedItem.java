@@ -1,8 +1,9 @@
 package org.sni.businessunit.model;
+import java.util.List;
 
 public record OptimizedItem(
         String userInput,
-        Product jointBest,
-        Product mercadonaBest,
-        Product hiperdinoBest
+        List<Product> jointBestList,
+        List<Product> mercadonaBestList,
+        List<Product> hiperdinoBestList
 ) {}

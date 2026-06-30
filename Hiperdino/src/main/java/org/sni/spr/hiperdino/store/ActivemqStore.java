@@ -1,10 +1,8 @@
 package org.sni.spr.hiperdino.store;
-
 import com.google.gson.Gson;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
-
-import javax.jms.*;
+import jakarta.jms.*;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

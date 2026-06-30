@@ -20,7 +20,7 @@ public static void main(String[] args) {
         ProductFeeder feeder = new HiperdinoProductFeeder();
         Controller controller = new Controller(feeder, storer, webScraper);
         LocalTime executionTime = readAndValidateTime(configReader);
-        controller.init();
+        controller.startScheduler(executionTime);
 
     } catch (DateTimeException e) {
         System.err.println("Error de configuración: La hora o minutos introducidos no son válidos (Horas: 0-23, Minutos: 0-59).");

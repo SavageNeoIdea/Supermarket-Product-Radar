@@ -43,7 +43,6 @@ public class HiperdinoPlaywrightNavigator {
         int failureAttempts = 0;
         while (failureAttempts < 6) {
             int previousCount = countProducts(page);
-            // Llamada estática directa a tu simulador
             HumanBehaviorSimulator.simulateHumanScroll(page);
             page.waitForLoadState(LoadState.NETWORKIDLE);
             failureAttempts = (countProducts(page) > previousCount) ? 0 : ++failureAttempts;

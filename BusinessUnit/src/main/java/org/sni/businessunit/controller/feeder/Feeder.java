@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface Feeder {
-    List<Product> processData(Map<String, List<String>> json);
-    Product processData(String source, String event);
-    String extractSourceFromJson(String eventString);
+    List<Product> processData(Map<String, List<String>> rawEventsPerSource);
+    Product processData(String source, String rawEvent);
+    String extractSourceFromJson(String rawEventString);
 }

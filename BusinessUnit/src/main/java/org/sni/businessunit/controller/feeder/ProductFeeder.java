@@ -1,5 +1,4 @@
 package org.sni.businessunit.controller.feeder;
-import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -14,29 +13,31 @@ import java.util.Map;
 public class ProductFeeder implements Feeder {
 
     private final SemanticEngine semanticEngine;
-    private final Gson gson;
 
     public ProductFeeder(SemanticEngine semanticEngine) {
         this.semanticEngine = semanticEngine;
-        this.gson = new Gson();
     }
 
     @Override
-    public List<Product> processData(Map<String, List<String>> rawJson) {
-        if (jsonIsEmpty(rawJson)) return Collections.emptyList();
-        List<Product> rawProducts = extractAllProducts(rawJson);
-        enrichWithEmbeddingsConcurrently(rawProducts);
-        return rawProducts;
+    public List<Product> processData(Map<String, List<String>> rawEventsPerSource) {
+        if (rawEventsPerSourceIsEmpty(rawEventsPerSource)) return Collections.emptyList();
+        List<Product> products = extractAllProducts(rawEventsPerSource);
+        enrichWithEmbeddingsConcurrently(products);
+        return products;
     }
 
-    private List<Product> extractAllProducts(Map<String, List<String>> rawJson) {
+    private boolean rawEventsPerSourceIsEmpty(Map<String, List<String>> rawEventsPerSource) {
+        return rawEventsPerSource == null || rawEventsPerSource.isEmpty();
+    }
+
+    private List<Product> extractAllProducts(Map<String, List<String>> rawEventsPerSource) {
         List<Product> productList = new ArrayList<>();
-        for (Map.Entry<String, List<String>> entry : rawJson.entrySet()) {
+        for (Map.Entry<String, List<String>> entry : rawEventsPerSource.entrySet()) {
             String source = entry.getKey();
             List<String> events = entry.getValue();
             if (events == null) continue;
             for (String event : events) {
-                Product product = parseSingleEvent(source, event);
+                Product product = createProductFromEvent(source, event);
                 if (product != null) {
                     productList.add(product);
                 }
@@ -46,14 +47,14 @@ public class ProductFeeder implements Feeder {
     }
 
     @Override
-    public Product processData(String source, String event) {
-        return parseSingleEvent(source, event);
+    public Product processData(String source, String rawEvent) {
+        return createProductFromEvent(source, rawEvent);
     }
 
-    private Product parseSingleEvent(String source, String event) {
-        if (event == null || event.isBlank()) return null;
+    private Product createProductFromEvent(String source, String rawEvent) {
+        if (eventIsNotValid(rawEvent)) return null;
         try {
-            JsonObject root = JsonParser.parseString(event).getAsJsonObject();
+            JsonObject root = JsonParser.parseString(rawEvent).getAsJsonObject();
             if (!root.has("payload")) return null;
             String ts = extractField(root, "ts");
             JsonObject payload = root.getAsJsonObject("payload");
@@ -64,28 +65,30 @@ public class ProductFeeder implements Feeder {
         }
     }
 
-    private Product mapPayloadToProduct(JsonObject payload, String source, String ts) {
-        String name = payload.get(source + "Name").getAsString();
-        double price = payload.get(source + "Price").getAsDouble();
-        String measure = payload.get(source + "Measure").getAsString();
-        int qty = payload.get(source + "Qty").getAsInt();
-        int pQty = payload.get(source + "PackageQty").getAsInt();
-        String brand = payload.get(source + "Brand").getAsString();
-        String ean = extractField(payload, source + "Ean");
+    private static boolean eventIsNotValid(String rawEvent) {
+        return rawEvent == null || rawEvent.isBlank();
+    }
 
+    private Product mapPayloadToProduct(JsonObject payload, String source, String ts) {
+        String name = extractField(payload, source + "Name");
+        double price = payload.has(source + "Price") ? payload.get(source + "Price").getAsDouble() : 0.0;
+        String measure = extractField(payload, source + "Measure");
+        double qty = payload.has(source + "Qty") ? payload.get(source + "Qty").getAsDouble() : 1;
+        int pQty = payload.has(source + "PackageQty") ? payload.get(source + "PackageQty").getAsInt() : 1;
+        String brand = extractField(payload, source + "Brand");
+        String ean = extractField(payload, source + "Ean");
         return new Product(name, price, measure, qty, pQty, ean, brand, source, ts);
     }
 
     private String extractField(JsonObject json, String memberName) {
-        if (json == null || !json.has(memberName)) return "";
         JsonElement element = json.get(memberName);
-        return element.isJsonNull() ? "" : element.getAsString();
+        return (element != null && element.isJsonPrimitive()) ? element.getAsString() : "";
     }
 
     private void enrichWithEmbeddingsConcurrently(List<Product> products) {
         products.parallelStream().forEach(product -> {
             try {
-                product.generateEmbedding(semanticEngine, gson);
+                product.setEmbeddingVector(semanticEngine.embedToString(product.getEmbeddingText()));
             } catch (Exception e) {
                 System.err.printf("Error calculando embedding para [%s]: %s%n", product.getName(), e.getMessage());
             }
@@ -103,9 +106,5 @@ public class ProductFeeder implements Feeder {
             System.out.println("Error parseando el JSON para extraer 'ss': " + e.getMessage());
         }
         return null;
-    }
-
-    private boolean jsonIsEmpty(Map<String, List<String>> rawJson) {
-        return rawJson == null || rawJson.isEmpty();
     }
 }

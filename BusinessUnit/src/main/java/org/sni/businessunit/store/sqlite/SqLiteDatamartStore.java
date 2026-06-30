@@ -34,20 +34,18 @@ public class SqLiteDatamartStore implements DatamartStore {
     @Override
     public void storeAllData(List<Product> products) {
         if (productListIsNotValid(products)) return;
-        persistProductsBatch(products);
+        persistProductsList(products);
     }
 
     private boolean productListIsNotValid(List<Product> products) {
         return products == null || products.isEmpty();
     }
 
-    private void persistProductsBatch(List<Product> products) {
+    private void persistProductsList(List<Product> products) {
         try (Connection conn = sqLiteConnection.getConnection()) {
             conn.setAutoCommit(false);
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                for (Product product : products) {
-                    storeSingleData(product, stmt);
-                }
+                prepareStatements(products, stmt);
                 stmt.executeBatch();
                 conn.commit();
             } catch (SQLException e) {
@@ -59,11 +57,17 @@ public class SqLiteDatamartStore implements DatamartStore {
         }
     }
 
+    private void prepareStatements(List<Product> products, PreparedStatement stmt) throws SQLException {
+        for (Product product : products) {
+            storeSingleData(product, stmt);
+        }
+    }
+
     private void storeSingleData(Product product, PreparedStatement stmt) throws SQLException {
         stmt.setString(1, product.getName());
         stmt.setDouble(2, product.getPrice());
         stmt.setString(3, product.getMeasure().toString());
-        stmt.setInt(4, product.getQuantity());
+        stmt.setDouble(4, product.getQuantity());
         stmt.setInt(5, product.getPackageQuantity());
         stmt.setString(6, product.getEan());
         stmt.setString(7, product.getBrand());

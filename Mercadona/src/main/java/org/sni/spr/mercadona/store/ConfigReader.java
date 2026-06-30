@@ -1,93 +1,73 @@
 package org.sni.spr.mercadona.store;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ConfigReader {
 
+    private static final String CONFIG_FILE_NAME = "config.json";
+    private static final String CONFIG_FILE_FALLBACK = "../config.json";
+
     public Map<String, String> loadConfig(String section, String key) {
         File configFile = findConfigFile();
-        if (configFile == null) {
-            System.err.println("ERROR: No se encontró config.json.");
-            return null;
-        }
-
         String content = readFile(configFile);
-        if (content == null) return null;
-        if (!content.contains("\"" + section + "\"")) {
-            System.err.println("ERROR: No existe la sección " + section + " en config.json.");
-            return null;
-        }
-
         String sectionBlock = extractBlock(content, section);
-        if (sectionBlock == null) return null;
-        if (!sectionBlock.contains("\"" + key + "\"")) {
-            System.err.println("ERROR: No existe la clave " + key + " dentro de " + section);
-            return null;
-        }
-
         String keyBlock = extractBlock(sectionBlock, key);
-        if (keyBlock == null) return null;
+        return parseKeyValuePairs(keyBlock);
+    }
 
-        return parseKeyValueBlock(keyBlock);
+    private File findConfigFile() {
+        File file = new File(CONFIG_FILE_NAME);
+        if (file.exists()) return file;
+        file = new File(CONFIG_FILE_FALLBACK);
+        if (file.exists()) return file;
+        throw new IllegalStateException("No se encontró " + CONFIG_FILE_NAME + " en ninguna ruta conocida");
+    }
+
+    private String readFile(File file) {
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Error leyendo " + file.getName() + ": " + e.getMessage(), e);
+        }
+        return content.toString();
     }
 
     private String extractBlock(String content, String key) {
         int keyIndex = content.indexOf("\"" + key + "\"");
-        if (keyIndex == -1) return null;
-        int start = content.indexOf("{", keyIndex);
-        if (start == -1) return null;
-        int braceCount = 0;
-        int end = start;
-        for (; end < content.length(); end++) {
-            char c = content.charAt(end);
-            if (c == '{') braceCount++;
-            if (c == '}') braceCount--;
-            if (braceCount == 0) break;
-        }
-        if (braceCount != 0) return null;
-        return content.substring(start + 1, end).trim();
+        if (keyIndex == -1) throw new IllegalArgumentException("Clave no encontrada en config: " + key);
+
+        int blockStart = content.indexOf("{", keyIndex);
+        if (blockStart == -1) throw new IllegalArgumentException("No hay bloque { } para la clave: " + key);
+
+        int blockEnd = findClosingBrace(content, blockStart);
+        return content.substring(blockStart + 1, blockEnd).trim();
     }
 
-
-    private Map<String, String> parseKeyValueBlock(String block) {
-        Map<String, String> map = new HashMap<>();
-        String[] pairs = block.split(",");
-
-        for (String pair : pairs) {
-            if (pair.contains(":")) {
-                String[] kv = pair.split(":", 2);
-                String k = kv[0].replace("\"", "").trim();
-                String v = kv[1].replace("\"", "").trim();
-                map.put(k, v.equalsIgnoreCase("null") ? null : v);
-            }
+    private int findClosingBrace(String content, int openBraceIndex) {
+        int depth = 0;
+        for (int i = openBraceIndex; i < content.length(); i++) {
+            char c = content.charAt(i);
+            if (c == '{') depth++;
+            if (c == '}') depth--;
+            if (depth == 0) return i;
         }
-        return map;
+        throw new IllegalArgumentException("Bloque JSON sin cerrar a partir del índice " + openBraceIndex);
     }
 
-    private File findConfigFile() {
-        File configFile = new File("config.json");
-        if (!configFile.exists()) {
-            configFile = new File("../config.json");
+    private Map<String, String> parseKeyValuePairs(String block) {
+        Map<String, String> result = new HashMap<>();
+        for (String pair : block.split(",")) {
+            if (!pair.contains(":")) continue;
+            String[] kv = pair.split(":", 2);
+            String key = kv[0].replace("\"", "").trim();
+            String value = kv[1].replace("\"", "").trim();
+            result.put(key, value.equalsIgnoreCase("null") ? null : value);
         }
-        return configFile.exists() ? configFile : null;
-    }
-
-    private String readFile(File file) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            StringBuilder builder = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                builder.append(line);
-            }
-            return builder.toString();
-        } catch (IOException e) {
-            System.err.println("Error leyendo config.json: " + e.getMessage());
-            return null;
-        }
+        return result;
     }
 }

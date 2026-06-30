@@ -1,30 +1,25 @@
-import org.sni.businessunit.controller.Controller;
-import org.sni.businessunit.controller.activemq.Subscriptor;
-import org.sni.businessunit.controller.embedding.SemanticEngine;
+import org.sni.businessunit.controller.activemq.ActiveMqConfig;
+import  org.sni.businessunit.controller.Controller;
 import org.sni.businessunit.controller.feeder.ProductFeeder;
 import org.sni.businessunit.controller.embedding.EmbeddingService;
-import org.sni.businessunit.controller.activemq.ActiveMqConfig;
 import org.sni.businessunit.controller.activemq.ActiveMqSubscriptor;
 import org.sni.businessunit.controller.activemq.ConfigReader;
 import org.sni.businessunit.controller.reader.EventReader;
-import org.sni.businessunit.controller.shoppinglist.ProductCharger;
-import org.sni.businessunit.controller.shoppinglist.SearchQuery;
-import org.sni.businessunit.controller.shoppinglist.ShopListBuilder;
-import org.sni.businessunit.store.DatamartStore;
+import org.sni.businessunit.controller.shoppinglist.ShopListBuilderDefault;
 import org.sni.businessunit.store.sqlite.SQLiteConnection;
 import org.sni.businessunit.controller.shoppinglist.SQLiteQuery;
 import org.sni.businessunit.store.sqlite.SqLiteDatamartStore;
+import java.util.Map;
 
 public static void main(String[] args) {
-    final SemanticEngine iaService = new EmbeddingService();
+    final EmbeddingService iaService = new EmbeddingService();
     final SQLiteConnection sqliteConn = new SQLiteConnection();
     final EventReader eventReader = new EventReader("eventstore", getConfigTopic());
     final ProductFeeder productFeeder = new ProductFeeder(iaService);
-    final DatamartStore datamartStore = new SqLiteDatamartStore(sqliteConn);
-    final Subscriptor activeMqSub = new ActiveMqSubscriptor(getInitializedMqConfig());
-    final ProductCharger charger = new ProductCharger(sqliteConn);
-    final SearchQuery searchQuery = new SQLiteQuery(charger, iaService);
-    final ShopListBuilder shopListBuilder = new ShopListBuilder(searchQuery);
+    final SqLiteDatamartStore datamartStore = new SqLiteDatamartStore(sqliteConn);
+    final ActiveMqSubscriptor activeMqSub = new ActiveMqSubscriptor(getActiveMqConfig());
+    final SQLiteQuery searchQuery = new SQLiteQuery(sqliteConn, iaService);
+    final ShopListBuilderDefault shopListBuilder = new ShopListBuilderDefault(searchQuery);
 
     Controller controller = new Controller(
             eventReader,
@@ -36,12 +31,22 @@ public static void main(String[] args) {
     controller.init();
 }
 
-private static String getConfigTopic() {
-    return new ConfigReader().loadConfig("subscribers", "businessUnitSubscriber").get("topicName");
+private static ActiveMqConfig getActiveMqConfig() {
+    ConfigReader configReader = new ConfigReader();
+    Map<String, String> configMap = configReader.loadConfig("subscribers", "businessUnitSubscriber");
+    if (configMap == null) {
+        throw new RuntimeException("ERROR: Could not load configuration for businessUnitSubscriber");
+    }
+    return new ActiveMqConfig(
+            configMap.get("brokerUrl"),
+            configMap.get("topicName"),
+            configMap.get("clientId"),
+            configMap.get("subscriptionName"),
+            configMap.get("username"),
+            configMap.get("password")
+    );
 }
 
-private static ActiveMqConfig getInitializedMqConfig() {
-    ActiveMqConfig config = new ActiveMqConfig();
-    config.initConfigurations();
-    return config;
+private static String getConfigTopic() {
+    return new ConfigReader().loadConfig("subscribers", "businessUnitSubscriber").get("topicName");
 }

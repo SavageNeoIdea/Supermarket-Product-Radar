@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.sni.spr.mercadona.model.Product;
 
-import javax.jms.*;
+import jakarta.jms.*;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
