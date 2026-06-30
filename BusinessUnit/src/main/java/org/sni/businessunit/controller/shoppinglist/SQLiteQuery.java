@@ -85,14 +85,12 @@ public class SQLiteQuery implements SearchQuery {
     }
 
     private List<Product> findTopMatchingProductsBySource(String input, String source) {
-        float[] queryVector = semanticEngine.embedInput(input);
-
+        float[] queryInput = semanticEngine.embedInput(input);
         return catalogCache.parallelStream()
                 .filter(product -> source.equalsIgnoreCase(product.getSource()))
                 .map(product -> {
                     try {
-                        float[] productVector = gson.fromJson(product.getEmbeddingVector(), float[].class);
-                        Double score = semanticEngine.calculateHybridScore(productVector, product.getName(), queryVector, input);
+                        Double score = semanticEngine.calculateMatchScore(product, queryInput, input);
                         if (score != null) {
                             product.setSimilarityScore(score);
                             return product;

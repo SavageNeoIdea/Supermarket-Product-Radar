@@ -102,19 +102,21 @@ public class AppCli {
     }
 
     private static Product getProduct(Product chosenMercadona, Product chosenHiperdino) {
+        Product chosenJoint;
         if (chosenMercadona != null && chosenHiperdino != null) {
             double costPerUnitMercadona = chosenMercadona.getPrice() /
                     (chosenMercadona.getQuantity() * chosenMercadona.getPackageQuantity() * chosenMercadona.getMeasure().getFactorToSI());
 
             double costPerUnitHiperdino = chosenHiperdino.getPrice() /
                     (chosenHiperdino.getQuantity() * chosenHiperdino.getPackageQuantity() * chosenHiperdino.getMeasure().getFactorToSI());
-            Product chosenJoint = (costPerUnitMercadona <= costPerUnitHiperdino) ? chosenMercadona : chosenHiperdino;
+            chosenJoint = (costPerUnitMercadona <= costPerUnitHiperdino) ? chosenMercadona : chosenHiperdino;
         } else if (chosenMercadona != null) {
-            Product chosenJoint = chosenMercadona;
+            chosenJoint = chosenMercadona;
         } else {
-            Product chosenJoint = chosenHiperdino;
+            chosenJoint = chosenHiperdino;
         }
-        return null;
+
+        return chosenJoint;
     }
 
     private Product askUserForProduct(Scanner sc, List<Product> options, String storeName) {
@@ -124,8 +126,8 @@ public class AppCli {
         }
 
         System.out.println("\n--- 🛒 Opciones en " + storeName + " ---");
-        System.out.printf("%-3s | %-35s | %-12s | %-8s | %-12s%n", "Nº", "Producto", "Formato", "Precio", "Prec. Est.");
-        System.out.println("-------------------------------------------------------------------------------");
+        System.out.printf("%-4s | %-50s | %-12s | %-8s | %-12s%n", "Nº", "Producto", "Formato", "Precio", "Prec. Est.");
+        System.out.println("------------------------------------------------------------------------------------------------------------");
 
         for (int i = 0; i < options.size(); i++) {
             Product p = options.get(i);

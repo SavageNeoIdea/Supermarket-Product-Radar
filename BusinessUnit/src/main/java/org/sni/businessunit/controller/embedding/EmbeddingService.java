@@ -6,6 +6,7 @@ import dev.langchain4j.model.embedding.onnx.OnnxEmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.PoolingMode;
 import dev.langchain4j.store.embedding.CosineSimilarity;
 import dev.langchain4j.store.embedding.RelevanceScore;
+import org.sni.businessunit.model.Product;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -55,7 +56,25 @@ public final class EmbeddingService implements SemanticEngine {
         return gson.toJson(calculateEmbeddingVector(text));
     }
 
+    private static boolean textIsNotValid(String text) {
+        return text == null || text.isBlank();
+    }
+
     @Override
+    public Double calculateMatchScore(Product product, float[] inputVector, String input) {
+        float[] productVector = gson.fromJson(product.getEmbeddingVector(), float[].class);
+
+        try {
+            double semanticScore = computeRelevance(inputVector, productVector);
+            if (semanticScore > SIMILARITY_THRESHOLD) {
+                return applyLexicalBonus(semanticScore, product.getName(), input);
+            }
+        } catch (Exception e) {
+            System.err.printf("Error calculando similitud semántica para el texto [%s]: %s%n", product.getName(), e.getMessage());
+        }
+        return null;
+    }
+
     public float[] embedInput(String text) {
         return calculateEmbeddingVector(sanitizeText(text));
     }
@@ -80,11 +99,6 @@ public final class EmbeddingService implements SemanticEngine {
         return text;
     }
 
-    private static boolean textIsNotValid(String text) {
-        return text == null || text.isBlank();
-    }
-
-    @Override
     public double computeRelevance(float[] vectorA, float[] vectorB) {
         Embedding embeddingA = Embedding.from(vectorA);
         Embedding embeddingB = Embedding.from(vectorB);
@@ -92,21 +106,8 @@ public final class EmbeddingService implements SemanticEngine {
         return RelevanceScore.fromCosineSimilarity(cosine);
     }
 
-    @Override
-    public Double calculateHybridScore(float[] productVector, String productText, float[] queryVector, String queryText) {
-        try {
-            double semanticScore = computeRelevance(queryVector, productVector);
-            if (semanticScore > SIMILARITY_THRESHOLD) {
-                return applyLexicalBonus(semanticScore, productText, queryText);
-            }
-        } catch (Exception e) {
-            System.err.printf("Error calculando similitud semántica para el texto [%s]: %s%n", productText, e.getMessage());
-        }
-        return null;
-    }
-
     private double applyLexicalBonus(double semanticScore, String productName, String queryText) {
-        Set<String> queryTokens   = tokenize(queryText);
+        Set<String> queryTokens = tokenize(sanitizeText(queryText));
         Set<String> productTokens = tokenize(productName);
 
         if (queryTokens.isEmpty() || productTokens.isEmpty()) {
@@ -132,13 +133,12 @@ public final class EmbeddingService implements SemanticEngine {
         return semanticScore + bonus;
     }
 
-    private Set<String> tokenize(String text) {
-        String normalized = sanitizeText(text);
-        if (normalized.isBlank()) {
+    private Set<String> tokenize(String normalizedText) {
+        if (normalizedText.isBlank()) {
             return Collections.emptySet();
         }
 
-        return Arrays.stream(normalized.split("\\s+"))
+        return Arrays.stream(normalizedText.split("\\s+"))
                 .filter(w -> w.length() > 2)
                 .filter(w -> !STOPWORDS.contains(w))
                 .map(this::extractRoot)

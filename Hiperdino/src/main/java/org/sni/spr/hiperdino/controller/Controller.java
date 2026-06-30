@@ -3,7 +3,6 @@ package org.sni.spr.hiperdino.controller;
 import org.sni.spr.hiperdino.controller.feeder.ProductFeeder;
 import org.sni.spr.hiperdino.model.RawCategoryProductBatch;
 import org.sni.spr.hiperdino.controller.feeder.scraper.WebScraper;
-import org.sni.spr.hiperdino.controller.simulationForTesting.HiperdinoSimulation;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
 import org.sni.spr.hiperdino.store.Store;
 
@@ -105,14 +104,5 @@ public class Controller {
         System.out.println("Productos procesados: " + total);
         System.out.printf("Tiempo total: %.2f segundos%n", seconds);
         System.out.println("----------------\n");
-    }
-
-    public void initSimulation() {
-        System.out.println("Iniciando SIMULACIÓN de carga...");
-        long startTime = System.currentTimeMillis();
-        AtomicInteger counter = new AtomicInteger(0);
-        store.storeAllData(new HiperdinoSimulation().init());
-        long endTime = System.currentTimeMillis();
-        printSummary("Simulación", counter.get(), startTime, endTime);
     }
 }
