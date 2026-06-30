@@ -1,5 +1,5 @@
-package org.sni.businessunit.store.sqlite;
-import org.sni.businessunit.store.DatamartConnection;
+package org.sni.businessunit.controller.store.sqlite;
+import org.sni.businessunit.controller.store.DatamartConnection;
 import org.sni.businessunit.controller.activemq.ConfigReader;
 import java.sql.Connection;
 import java.sql.DriverManager;

@@ -1,6 +1,6 @@
 package org.sni.spr.mercadona.controller;
 
-import org.sni.spr.mercadona.store.Storer;
+import org.sni.spr.mercadona.controller.store.Storer;
 
 import java.time.Duration;
 import java.time.LocalDateTime;

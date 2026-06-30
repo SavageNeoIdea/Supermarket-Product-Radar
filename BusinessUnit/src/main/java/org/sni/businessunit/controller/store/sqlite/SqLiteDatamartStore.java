@@ -1,6 +1,6 @@
-package org.sni.businessunit.store.sqlite;
+package org.sni.businessunit.controller.store.sqlite;
 import org.sni.businessunit.model.Product;
-import org.sni.businessunit.store.DatamartStore;
+import org.sni.businessunit.controller.store.DatamartStore;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;

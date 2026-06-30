@@ -1,4 +1,4 @@
-package org.sni.spr.mercadona.store;
+package org.sni.spr.mercadona.controller.store;
 
 import org.sni.spr.mercadona.model.Product;
 

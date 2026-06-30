@@ -1,4 +1,4 @@
-package org.sni.eventstorebuilder.store;
+package org.sni.eventstorebuilder.controller.store;
 
 import org.sni.eventstorebuilder.model.Publisher;
 import java.io.IOException;

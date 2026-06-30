@@ -1,4 +1,4 @@
-package org.sni.spr.hiperdino.store;
+package org.sni.spr.hiperdino.controller.store;
 import com.google.gson.Gson;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;

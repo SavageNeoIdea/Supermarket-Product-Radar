@@ -1,8 +1,8 @@
 package org.sni.eventstorebuilder.controller;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import jakarta.jms.*;
-import org.sni.eventstorebuilder.store.BrokerConsumer;
-import org.sni.eventstorebuilder.store.EventStore;
+import org.sni.eventstorebuilder.controller.store.BrokerConsumer;
+import org.sni.eventstorebuilder.controller.store.EventStore;
 
 public class ActivemqEventConsumer implements MessageListener, BrokerConsumer {
 

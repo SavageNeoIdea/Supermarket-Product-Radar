@@ -2,7 +2,7 @@ package org.sni.businessunit.controller;
 import org.sni.businessunit.controller.feeder.Feeder;
 import org.sni.businessunit.controller.shoppinglist.ShopListBuilder;
 import org.sni.businessunit.model.Product;
-import org.sni.businessunit.store.DatamartStore;
+import org.sni.businessunit.controller.store.DatamartStore;
 import org.sni.businessunit.controller.activemq.Subscriptor;
 import org.sni.businessunit.controller.reader.DataReader;
 import org.sni.businessunit.view.AppCli;

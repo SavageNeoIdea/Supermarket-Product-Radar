@@ -1,4 +1,4 @@
-package org.sni.eventstorebuilder.store;
+package org.sni.eventstorebuilder.controller.store;
 
 import java.io.*;
 import java.util.HashMap;

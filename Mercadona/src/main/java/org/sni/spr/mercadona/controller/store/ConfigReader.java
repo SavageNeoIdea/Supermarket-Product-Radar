@@ -1,4 +1,4 @@
-package org.sni.spr.mercadona.store;
+package org.sni.spr.mercadona.controller.store;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;

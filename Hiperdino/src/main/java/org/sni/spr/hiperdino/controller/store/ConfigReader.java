@@ -1,4 +1,4 @@
-package org.sni.spr.hiperdino.store;
+package org.sni.spr.hiperdino.controller.store;
 
 import java.io.*;
 import java.util.HashMap;

@@ -1,6 +1,6 @@
 package org.sni.eventstorebuilder.controller;
-import org.sni.eventstorebuilder.store.BrokerConsumer;
-import org.sni.eventstorebuilder.store.EventStore;
+import org.sni.eventstorebuilder.controller.store.BrokerConsumer;
+import org.sni.eventstorebuilder.controller.store.EventStore;
 
 public class Controller {
     private final EventStore eventStore;

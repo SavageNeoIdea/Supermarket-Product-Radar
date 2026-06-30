@@ -1,4 +1,4 @@
-package org.sni.businessunit.store;
+package org.sni.businessunit.controller.store;
 
 import org.sni.businessunit.model.Product;
 

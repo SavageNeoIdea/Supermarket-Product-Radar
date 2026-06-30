@@ -1,4 +1,4 @@
-package org.sni.spr.mercadona.store;
+package org.sni.spr.mercadona.controller.store;
 
 import com.google.gson.Gson;
 import org.apache.activemq.ActiveMQConnectionFactory;

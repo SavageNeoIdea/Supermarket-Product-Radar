@@ -1,4 +1,4 @@
-package org.sni.eventstorebuilder.store;
+package org.sni.eventstorebuilder.controller.store;
 
 public interface BrokerConsumer {
     void startBrokerConsumer();

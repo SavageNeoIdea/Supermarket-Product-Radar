@@ -6,9 +6,9 @@ import org.sni.businessunit.controller.activemq.ActiveMqSubscriptor;
 import org.sni.businessunit.controller.activemq.ConfigReader;
 import org.sni.businessunit.controller.reader.EventReader;
 import org.sni.businessunit.controller.shoppinglist.ShopListBuilderDefault;
-import org.sni.businessunit.store.sqlite.SQLiteConnection;
+import org.sni.businessunit.controller.store.sqlite.SQLiteConnection;
 import org.sni.businessunit.controller.shoppinglist.SQLiteQuery;
-import org.sni.businessunit.store.sqlite.SqLiteDatamartStore;
+import org.sni.businessunit.controller.store.sqlite.SqLiteDatamartStore;
 import java.util.Map;
 
 public static void main(String[] args) {
