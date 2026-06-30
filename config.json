@@ -1,0 +1,40 @@
+{
+  "subscribers": {
+    "eventStoreSubscriber": {
+      "brokerUrl": "tcp://localhost:61616",
+      "topicName": "product",
+      "clientId": "EventStoreBuilder_Subscriber",
+      "subscriptionName": "MainEventStoreSub",
+      "username": "admin",
+      "password": "admin"
+    },
+    "businessUnitSubscriber": {
+      "datamartUrl": "jdbc:sqlite:datamart.db?journal_mode=WAL&busy_timeout=5000",
+      "brokerUrl": "tcp://localhost:61616",
+      "topicName": "product",
+      "clientId": "BusinessUnitSubscriber",
+      "subscriptionName": "realtimeDatamartUpdate",
+      "username": "admin",
+      "password": "admin"
+    }
+  },
+  "publishers": {
+    "hiperdino": {
+      "brokerUrl": "tcp://localhost:61616",
+      "topicName": "product",
+      "username": "admin",
+      "password": "admin",
+      "postalCode": "35010",
+      "ScheduleTimeHour": "00",
+      "ScheduleTimeMinutes": "00"
+    },
+    "mercadona": {
+      "brokerUrl": "tcp://localhost:61616",
+      "topicName": "product",
+      "username": "admin",
+      "password": "admin",
+      "ScheduleTimeHour": "00",
+      "ScheduleTimeMinutes": "00"
+    }
+  }
+}
