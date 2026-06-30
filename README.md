@@ -138,7 +138,7 @@ El sistema hace uso de una arquitectura Lambda.
 
 El flujo de información se distribuye a través de tópicos mediante el bróker de mensajería parametrizado en el archivo `config.json`:
 
-<img width="1032" height="587" alt="{F3135A59-46BC-4000-B5E6-9A47F3D371DE}" src="https://github.com/user-attachments/assets/259b749c-ceec-463e-82c0-f0c1c847f00f" />
+<img width="1139" height="642" alt="{C71C14AB-E9FE-4C44-BE40-17B1B8B8DC11}" src="https://github.com/user-attachments/assets/9286c0d7-5d34-4c51-a9cc-47c64270673f" />
 
 ### Arquitectura de la Aplicación
 
