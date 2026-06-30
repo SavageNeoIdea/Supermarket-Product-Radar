@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import org.sni.businessunit.controller.embedding.SemanticEngine;
 import org.sni.businessunit.model.OptimizedItem;
 import org.sni.businessunit.model.Product;
-import org.sni.businessunit.store.sqlite.SQLiteConnection;
+import org.sni.businessunit.controller.store.sqlite.SQLiteConnection;
 
 import java.time.Duration;
 import java.time.Instant;

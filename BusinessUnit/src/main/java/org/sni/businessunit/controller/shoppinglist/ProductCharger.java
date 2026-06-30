@@ -1,7 +1,7 @@
 package org.sni.businessunit.controller.shoppinglist;
 
 import org.sni.businessunit.model.Product;
-import org.sni.businessunit.store.sqlite.SQLiteConnection;
+import org.sni.businessunit.controller.store.sqlite.SQLiteConnection;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

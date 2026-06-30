@@ -3,9 +3,9 @@ import org.sni.spr.hiperdino.controller.feeder.HiperdinoProductFeeder;
 import org.sni.spr.hiperdino.controller.feeder.ProductFeeder;
 import org.sni.spr.hiperdino.controller.feeder.scraper.HiperdinoPlaywrightManager;
 import org.sni.spr.hiperdino.controller.feeder.scraper.WebScraper;
-import org.sni.spr.hiperdino.store.ActivemqStore;
-import org.sni.spr.hiperdino.store.ConfigReader;
-import org.sni.spr.hiperdino.store.Store;
+import org.sni.spr.hiperdino.controller.store.ActivemqStore;
+import org.sni.spr.hiperdino.controller.store.ConfigReader;
+import org.sni.spr.hiperdino.controller.store.Store;
 
 import java.time.DateTimeException;
 import java.time.LocalTime;

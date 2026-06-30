@@ -4,7 +4,7 @@ import org.sni.spr.hiperdino.controller.feeder.ProductFeeder;
 import org.sni.spr.hiperdino.model.RawCategoryProductBatch;
 import org.sni.spr.hiperdino.controller.feeder.scraper.WebScraper;
 import org.sni.spr.hiperdino.model.HiperdinoProduct;
-import org.sni.spr.hiperdino.store.Store;
+import org.sni.spr.hiperdino.controller.store.Store;
 
 import java.time.Duration;
 import java.time.LocalDateTime;

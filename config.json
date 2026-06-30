@@ -25,16 +25,16 @@
       "username": "admin",
       "password": "admin",
       "postalCode": "35010",
-      "ScheduleTimeHour": "12",
-      "ScheduleTimeMinutes": "10"
+      "ScheduleTimeHour": "00",
+      "ScheduleTimeMinutes": "00"
     },
     "mercadona": {
       "brokerUrl": "tcp://localhost:61616",
       "topicName": "product",
       "username": "admin",
       "password": "admin",
-      "ScheduleTimeHour": "12",
-      "ScheduleTimeMinutes": "10"
+      "ScheduleTimeHour": "00",
+      "ScheduleTimeMinutes": "00"
     }
   }
 }
