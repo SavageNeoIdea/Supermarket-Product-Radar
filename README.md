@@ -272,7 +272,7 @@ Debido al peso de mas de 100mb del modelo, se deberá descargar y posteriormanet
 
 - Descarga directa: https://huggingface.co/Xenova/paraphrase-multilingual-MiniLM-L12-v2/resolve/main/onnx/model_quantized.onnx?download=true
 - Si la forma automatica no funciona, aquí tienes el proceso manual: https://huggingface.co/Xenova/paraphrase-multilingual-MiniLM-L12-v2 -> "Files and Versions" -> seleccionas la carpeta "onnx" (que significa Open Neural Network Exchange, un formato open-source y ecoistema diseñado para la estandarización de representación de modelos de machine o deep learning) -> Localiza model_quantized.onnx y lo descargas:
-<img width="818" height="202" alt="image" src="https://github.com/user-attachments/assets/85f169b4-0df1-43f5-b353-936a2d5ae792" />
+<img width="1600" height="829" alt="{276FB0F2-5F94-45A7-8B6E-5E3E0B86E38E}" src="https://github.com/user-attachments/assets/bb943299-552e-4e87-98f9-287a234c1070" />
 
 - Mantenlo localizado ya que más adelante tendrás colocar el fichero donde se te indique.
 
