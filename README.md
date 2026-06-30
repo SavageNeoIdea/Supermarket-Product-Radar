@@ -17,7 +17,7 @@ Este sistema automatiza la recopilación de productos de las cadenas Mercadona e
 1. **Mercadona:** Módulo con planificador integrado (*Scheduler*) configurado por horas específicas para extraer productos de la plataforma de Mercadona y publicar eventos de actualización de precios, los extrae a través de su api interna haciendo uso de un sitemap, por lo que no se pueden obtener productos locales como productos Tirma en el caso de canarias, pero existen la mayoría de productos.
 2. **Hiperdino:** Módulo homólogo que extrae productos de Hiperdino mediante técnicas de web scraping distribuidas (Playwright) haciendo uso de un código postal, publicando sus eventos según la localización regional y la hora programada.
 3. **EventStoreBuilder:** Componente encargado de escuchar de forma persistentemente los eventos de productos y almacenarlos cronológicamente en un almacén de eventos inmutable (*Event Store*).
-4. **Business Unit:** El núcleo de inteligencia de negocio. Implementa una **Arquitectura Lambda** para la gestión de datos: al arrancar, reconstruye su estado leyendo el histórico completo para inicializar su base de datos local (Datamart) impulsada por Embeddings de IA y, posteriormente, procesa eventos en tiempo real para mantener el catálogo fresco, exponiendo un motor interactivo de optimización de cestas.
+4. **Business Unit:** El núcleo de inteligencia de negocio. Al arrancar, reconstruye su estado leyendo el histórico completo para inicializar su base de datos local (Datamart) impulsada por Embeddings de IA y, posteriormente, procesa eventos en tiempo real para mantener el catálogo fresco, exponiendo un motor interactivo de optimización de cestas.
 
 ### Propuesta de Valor: El "Impuesto de la Pereza" (*Laziness Tax*)
 
@@ -25,7 +25,7 @@ El sistema permite procesar una lista de la compra en formato de texto libre y g
 
 * **Cesta Optimizada:** La combinación ideal y más barata de los productos que has seleccionado en el proceso de creación.
 * **Cesta Solo Mercadona:** Productos añadidos por el usuario y coste total si el usuario decide comprar exclusivamente en este establecimiento.
-* **Cesta Solo Hiperdino:** Productos añadidos por el usuario y coste total si el usuario decide comprar exclusivamente en este establecimiento.
+* **Cesta Solo Hiperdino:** Misma idea que en Mercadona pero para Hiperdino.
 
 > 💡 **Métrica Clave:** El sistema calcula y muestra explícitamente el **Análisis de Pérdidas**, que representa la cantidad exacta de dinero que el usuario pierde por la comodidad de no diversificar su compra entre ambos establecimientos (ir a uno solo en lugar de acudir a ambos cuando toca).
 
@@ -100,7 +100,7 @@ El impacto de los tokens se unifica mediante pesos estáticos ($70\%$ Cobertura,
 
 $$Score_{Lexical} = (QC \cdot 0.70) + (JI \cdot 0.30)$$
 
-$$Bonus_{Lexical} = Score_{Lexical} \cdot MAX\_LEXICAL\_BONUS$$
+$$Bonus_{Lexical} = Score_{Lexical} \cdot MaxLexicalBonus$$
 
 ---
 
@@ -122,7 +122,7 @@ El comportamiento del motor semántico puede calibrarse modificando las constant
 
 Durante la fase de *Replay* de la Arquitectura Lambda, el sistema debe procesar miles de registros históricos de precios. Calcular los embeddings uno a uno degradaría el tiempo de arranque.
 
-Se implementó un pool de hilos que usa todos los hilos disponibles (`ExecutorService` con hilos asignados según los núcleos de la máquina) que procesa las filas del *Event Store* en paralelo. Esto distribuye de forma balanceada el cálculo matricial de los embeddings en la CPU, reduciendo la latencia de inicialización en aproximadamente un **80%**. Eso si, espera que la cpu llega a porcentages de hasta el 100% ya que va a usar durante unos segundos toda su capacidad.
+Se implementó un pool de hilos que usa todos los hilos disponibles (`ExecutorService` con hilos asignados según los núcleos de la máquina) que procesa las filas del *Event Store* en paralelo. Esto distribuye de forma balanceada el cálculo matricial de los embeddings en la CPU, reduciendo la latencia de inicialización en aproximadamente un **80%**. Eso si, espera que la cpu llega a porcentajes de hasta el 100% ya que va a usar durante unos segundos toda su capacidad.
 
 ### 2. Motor de Búsqueda Concurrente (Producer-Consumer)
 
@@ -184,13 +184,13 @@ Es el núcleo analítico de la solución. Consolida las lecturas históricas y e
 
 Para garantizar un ecosistema mantenible, escalable y robusto, el desarrollo se ha guiado por las mejores prácticas de la ingeniería de software:
 
-* **Patrón Publish-Subscriber (Pub/Sub):** Desacoplamiento total entre los productores de datos (scrapers) y los consumidores finales.
-* **Event Sourcing:** Salvaguarda el ciclo de vida del producto como una serie de eventos mutativos, impidiendo la sobrescritura directa de datos de precios.
+* **Patrón Publisher-Subscriber (Pub/Sub):** Desacoplamiento total entre los productores de datos (scrapers) y los consumidores finales.
+* **Event Sourcing:** Salvaguarda el ciclo de vida del producto como una serie de eventos, impidiendo la sobrescritura directa de datos de precios.
 * **Capa de Persistencia Idempotente:** La base de datos SQLite usada en businessUnit aprovecha un mecanismo de `UPSERT` para garantizar la consistencia e idempotencia de los datos semánticos haciendo uso del ean y source como claves para esta query, evitando duplicar registros si el lote de eventos vuelve a ser emitido.
 * **Principio de Responsabilidad Única (SRP):** Prestamos especial atención al diseño modular.
 * **Inyección de Dependencias y Desacoplamiento:** Uso sistemático de **interfaces** y almacenamiento (`Store`, `WebScraper`, ...), facilitando la sustitución de componentes y los entornos de pruebas unitarias.
-* **Buenos nombres:** Hemos tratado de poner los mejores nombres que se nos han ocurrido para que todo este lo mas claro posible.
-* **Uso de MVC:** Hemos hecho uso del patron de arquitectura model, view controller respetando las reglas de visibilidad (también existe un paquete extra de store que lo hemos dejado fuera de estos 3).
+* **Buenos nombres:** Hemos tratado de poner los mejores nombres para que todo este lo mas claro posible.
+* **Uso de MVC:** Hacemos uso del patrón de arquitectura model-view-controller respetando las reglas de visibilidad.
 
 ---
 
@@ -271,10 +271,10 @@ Para garantizar la integridad de la arquitectura Lambda, evitar la pérdida de m
 Debido al peso de mas de 100mb del modelo, se deberá descargar y posteriormanete colocar en un lugar específico del BusinessUnit:
 
 - Descarga directa: https://huggingface.co/Xenova/paraphrase-multilingual-MiniLM-L12-v2/resolve/main/onnx/model_quantized.onnx?download=true
-- Si la forma automatica no funciona, aquí tienes el proceso manual: https://huggingface.co/Xenova/paraphrase-multilingual-MiniLM-L12-v2 -> "Files and Versions" -> seleccionas la carpeta "onnx" (que significa Open Neural Network Exchange, un formato open-source y eocistema diseñado para la estandarización de representación de modelos de machine o deep learning) -> Localiza model_quantized.onnx y lo descargas:
+- Si la forma automatica no funciona, aquí tienes el proceso manual: https://huggingface.co/Xenova/paraphrase-multilingual-MiniLM-L12-v2 -> "Files and Versions" -> seleccionas la carpeta "onnx" (que significa Open Neural Network Exchange, un formato open-source y ecoistema diseñado para la estandarización de representación de modelos de machine o deep learning) -> Localiza model_quantized.onnx y lo descargas:
 <img width="818" height="202" alt="image" src="https://github.com/user-attachments/assets/85f169b4-0df1-43f5-b353-936a2d5ae792" />
 
-- Mantenlo localizado ya que mas adelante tendrás colocar el fichero donde se te indique.
+- Mantenlo localizado ya que más adelante tendrás colocar el fichero donde se te indique.
 
 ---
 
@@ -333,11 +333,11 @@ Por defecto, los scrapers esperan a la hora configurada en el `config.json`. Si 
 * **Módulo Hiperdino:** Dirígete al archivo `Main.java`, localiza la línea 23, sustituye la lógica del *scheduler* posterior a la instancia del controlador e invoca directamente al método de inicialización:
 Vamos, borra la linea 23 y copia tal cual lo siguiente (executionTime se saca automáticamente):
 ```java
-controller.startScheduler(executionTime);
+controller.init();
 ```
 En caso de querer volver a la versión con sheduler:
 ```java
-
+controller.startScheduler(executionTime);
 ```
 
 * **Módulo Mercadona:** Realiza el mismo procedimiento en su respectivo `Main.java` (línea 23), reemplazando el código del planificador por la ejecución directa del flujo pasando la URL del sitemap:
@@ -369,7 +369,7 @@ Ejecuta las clases `Main.java` de los módulos `Hiperdino` y `Mercadona`. Estos 
 
 ## 7. Ejemplos de Uso e Interacción
 
-Al iniciar el módulo **Business Unit**, después de un breve lapso de tiempo donde se reconstruye el último día de cada topic/source del eventsotre como un datamart y se inicie la conexión con el activeMQ (si está encendido), se desplegará la interfaz interactiva por consola basada en comandos de teclado. Puedes introducir tus términos de búsqueda y la IA tratará de buscar un top 7 de aquellos resultados que mas se adecuen, a veces puede fallar ya que es un modelo bastante ligero, hemos implementado un top 7 para que puedas elegir o saltartelo en caso de no encontrar una respuesta satisfactoria.
+Al iniciar el módulo **Business Unit**, después de un breve lapso de tiempo donde se reconstruye el último día de cada topic/source del eventsotre como un datamart y se inicie la conexión con el activeMQ (si está encendido), se desplegará la interfaz interactiva por consola basada en comandos de teclado. Puedes introducir tus términos de búsqueda y la IA tratará de buscar un top 7 de aquellos resultados que mas se adecuen, a veces puede fallar ya que es un modelo bastante ligero, hemos implementado un top 7 para que puedas elegir o saltártelo en caso de no encontrar una respuesta satisfactoria.
 
 ### Flujo en la Consola de Comandos
 
@@ -382,7 +382,7 @@ Elige una opción:
 Responde seleccionando uno de los números del teclado: 
 ```
 
-1. Introduce `1` para iniciar el asistente de entrada de datos (`Preparando una nueva lista...`). El sistema te pedirá los artículos línea por línea hasta que escribas `fin` o dejes una línea vacía. Trata de ser específico, a menos especifico menos probabilidad hay de que encuentres lo que buscas exactamente, encontrarás un ejemplo mas adelante para que te hagas una idea mas o menos:
+1. Introduce `1` para iniciar el asistente de entrada de datos (`Preparando una nueva lista...`). El sistema te pedirá los artículos línea por línea hasta que escribas `fin` o dejes una línea vacía. Trata de ser específico, a menos especifico menos probabilidad hay de que encuentres lo que buscas exactamente, encontrarás un ejemplo mas adelante para que te hagas una idea:
   
 3. Introduce `2` (`Cargando tu análisis de compra (Conjunta vs Individual)...`). Este ejecutará la función que genera el reporte de ahorro comparativo. TEN EN CUENTA QUE CADA VEZ QUE CREES UNA LISTA, LA ANTERIOR SERÁ BORRADA
 #### Ejemplo de procedimiento:
@@ -720,7 +720,7 @@ Cargando tu análisis de compra (Conjunta vs Individual)...
 - [HIPERDINO ] escamilla aceituna gordal sin hueso alinada: 5,35€ | Cantidad: 0,40 (kg)
 - [HIPERDINO ] milka tableta de chocolate daim: 1,99€ | Cantidad: 0,09 (kg)
 --------------------------------------------------------------------
-💰 COSTE TOTAL EN HIPERDINO: 21,62€
+💰 COSTE TOTAL EN HIPERDINO: 27,62€
 ====================================================================
 
 ====================================================================
@@ -731,7 +731,7 @@ Cargando tu análisis de compra (Conjunta vs Individual)...
    • ❌ Dinero que pierdes por comodidad: 0,16€
 
 ▶️ SI COMPRAS TODO EN HIPERDINO:
-   • Coste Total: 21,62€
-   • ❌ Dinero que pierdes por comodidad: 0,00€
+   • Coste Total: 27,62€
+   • ❌ Dinero que pierdes por comodidad: 1,41€
 ====================================================================
 ```
